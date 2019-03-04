@@ -166,6 +166,15 @@ def on_update(doc,method):
 			frappe.db.set_value("POS Profile", {"employee":cstr(doc.name)}, "income_account", cstr(income_account))
 			frappe.db.commit()
 
+		# ---------------------------------------------------------------------------
+		# update pos territory
+		# --------------------------------------------------------------------------- */
+		pos_profile_territory = frappe.db.get_value("POS Profile", {"employee": cstr(doc.name)}, "territory")
+		territory = frappe.db.get_value("Branch", cstr(doc.branch), "territory")
+		if cstr(pos_profile_territory) != cstr(print_heading):
+			frappe.db.set_value("POS Profile", {"employee":cstr(doc.name)}, "territory", cstr(territory))
+			frappe.db.commit()
+
 # ---------------------------------------------------------------------------
 # create pos profile
 # --------------------------------------------------------------------------- */
@@ -196,7 +205,8 @@ def create_pos_profile(doc):
 			"item_groups":item_groups,
 			"letter_head":frappe.db.get_value("Company", doc.company, "default_letter_head"),
 			"tc_name":frappe.db.get_value("Company", doc.company, "default_terms"),
-			"taxes_and_charges":frappe.db.get_value("Sales Taxes and Charges Template",{"is_default":1}, "name")
+			"taxes_and_charges":frappe.db.get_value("Sales Taxes and Charges Template",{"is_default":1}, "name"),
+			"territory":frappe.db.get_value("Branch", doc.branch, "territory")
 		})
 
 	pos_profile.flags.ignore_permissions = True
@@ -207,11 +217,11 @@ def create_pos_profile(doc):
 # --------------------------------------------------------------------------- */ 
 def get_employee_name_by_service(doctype, txt, searchfield, start, page_len, filters):
 	cond = ''
-	if filters.get('service'):
+	if filters.get('service'	):
 		cond = 'and `tabServices`.service = "' + filters['service'] + '"'
 
 	return frappe.db.sql("""SELECT DISTINCT `tabEmployee`.name, `tabEmployee`.employee_name FROM `tabEmployee` LEFT JOIN `tabServices` ON `tabServices`.parent = `tabEmployee`.name
-		WHERE `tabEmployee`.status = 'Active'
+		WHERE `tabEmployee`.status = 'Active' AND `tabServices`.is_provided = 'Yes'
 			 {cond} 
 		ORDER BY
 			`tabEmployee`.name ASC

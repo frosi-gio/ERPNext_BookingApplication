@@ -7,7 +7,11 @@ frappe.ui.form.on('Event', {
 		}
 	},
 	refresh:function(frm,dt,dn){
-		
+		if(frm.doc.workflow_state == "Approved") {
+			frm.add_custom_button(__('Make Invoice'), function() { 
+				make_invoice(frm,dt,dn)
+			  });
+		}
 	},
 	check_availability: function(frm) {
 
@@ -201,6 +205,48 @@ frappe.ui.form.on('Event', {
 				// }
 			});
 
+			// Code to disable the time slot which don't have enough time to complete the appointment START.
+			for (var i = 0; i < button_list.length; i++) {
+
+				var is_time_slot_disabled = $wrapper
+							.find(`button[data-name="${button_list[i]}"]`)
+							.attr('disabled')
+
+				var start_time = flt(timeToDecimal(button_list[i]))
+				var end_time = flt(timeToDecimal(button_list[i])) + flt(frm.doc.duration/60)
+
+				if (is_time_slot_disabled != 'disabled')
+				{
+					for (var j = 0; j < button_list.length; j++) {
+
+						var btn_time = timeToDecimal(button_list[j])
+
+						if((start_time <= btn_time) && (end_time > btn_time))
+						{
+							var is_disabled = $wrapper
+							.find(`button[data-name="${button_list[j]}"]`)
+							.attr('disabled')
+
+							if(is_disabled == 'disabled')
+							{
+								$wrapper
+								.find(`button[data-name="${button_list[i]}"]`)
+								.attr('disabled', true);
+							}
+						}
+					}
+
+				}
+
+				if (end_time > day_end_time_decimal)
+				{
+					$wrapper
+					.find(`button[data-name="${button_list[i]}"]`)
+					.attr('disabled', true);
+				}
+			}
+			// Code to disable the time slot which don't have enough time to complete the appointment END.
+
 			// blue button when clicked
 			$wrapper.on('click', 'button', function() {
 				var $btn = $(this);
@@ -279,5 +325,12 @@ cur_frm.cscript.create_event= function(doc,dt,dn){
 					msgprint("succsess")
 				}
 			}
+		})
+}
+
+var make_invoice = function(frm,dt,dn){
+	frappe.model.open_mapped_doc({
+			method: "booking.booking.event.make_invoice",
+			frm: cur_frm
 		})
 }

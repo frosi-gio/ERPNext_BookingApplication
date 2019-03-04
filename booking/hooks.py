@@ -30,6 +30,9 @@ doctype_js = {
     "Employee": ["custom_scripts/employee.js"],
     "Event": ["custom_scripts/event.js"],
     "Branch": ["custom_scripts/branch.js"],
+	"Customer":["custom_scripts/customer.js"],
+	"Item":["custom_scripts/item.js"],
+	"Sales Invoice":["custom_scripts/sales_invoice.js"]
 }
 
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
@@ -52,6 +55,8 @@ doctype_js = {
 
 # Generators
 # ----------
+
+fixtures = ["Workflow","Email Alert","Custom Field","Property Setter"]
 
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
@@ -86,7 +91,9 @@ doctype_js = {
 
 doc_events = {
 	"Item":{
-		"validate" : "booking.booking.item.validate"
+		"validate" : "booking.booking.item.validate",
+		"after_insert": "booking.booking.item.after_insert",
+		"after_delete": "booking.booking.item.after_delete"
 	},
 	"Employee":{
 		"validate" : "booking.booking.employee.validate",
@@ -122,7 +129,7 @@ doc_events = {
 
 scheduler_events = {
 	"cron": {
-			"22 17 * * *": [
+			"15 18 * * *": [
 				"booking.booking.event.send_event_summary_mail"
 			]
 		}

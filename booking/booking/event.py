@@ -18,6 +18,9 @@ import google.oauth2.credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from oauth2client import file,client,tools
+from frappe.model.mapper import get_mapped_doc
+import re
+import dns.resolver
 
 
 # Google calendar setup global variables.
@@ -30,7 +33,7 @@ calendar_id = frappe.db.get_value("Booking Settings", None, "calendar_id")
 
 def validate(doc, method):
 	send_event_summary_mail()
-	# set_google_calender_event()
+	
 	send_email(doc)
 	#set start date
 	start_date = get_datetime(cstr(doc.appointment_date) + " " + cstr(doc.appointment_time))
@@ -38,6 +41,22 @@ def validate(doc, method):
 	#set end date
 	end_date = get_datetime(get_datetime(doc.starts_on) + timedelta(minutes=flt(doc.duration)))
 	doc.ends_on = end_date
+	
+	#set price list by employee pos profile
+	pos_selling_price_list = frappe.db.get_value("POS Profile", {"employee":doc.barber__beautician}, "selling_price_list")
+	doc.price_list = pos_selling_price_list
+
+	if not len(doc.event_detail):
+		event_detail = doc.append('event_detail', {})
+		event_detail.item_code = doc.service
+
+	if doc.barber__beautician:
+		if not doc.pos_profile:
+			pos_profile = frappe.db.get_value("POS Profile", {"employee":doc.barber__beautician}, "name")
+			doc.pos_profile = pos_profile
+			frappe.db.set_value("Event", doc.name, "pos_profile", pos_profile)
+			frappe.db.commit()
+
 
 def after_delete(doc, method):
 	access_token = get_access_token()
@@ -104,6 +123,7 @@ def delete_event(access_token):
 	gcalendar.events().delete(calendarId='primary', eventId=doc.google_event_id).execute()
 
 def insert_events(doc,access_token):
+	
 	time_zone = cstr(pytz.timezone(frappe.db.get_value("System Settings",None,"time_zone")).localize(get_datetime(doc.starts_on)).strftime('%z'))[:3]+':'+cstr(pytz.timezone(frappe.db.get_value("System Settings",None,"time_zone")).localize(get_datetime(doc.starts_on)).strftime('%z'))[3:]
 	start=cstr(doc.starts_on.strftime('%Y-%m-%dT%H:%M:%S'))+time_zone
 	end=cstr(doc.ends_on.strftime('%Y-%m-%dT%H:%M:%S'))+time_zone
@@ -121,11 +141,18 @@ def insert_events(doc,access_token):
 	credentials = google.oauth2.credentials.Credentials(**credentials_dict)
 	gcalendar = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
 	
-
+	
+	if check_email(cstr(doc.customer_email)):
+		# frappe.msgprint('if')
+		attendees = [{'email': cstr(doc.customer_email),'self':True}]
+	else:
+		# frappe.msgprint('else')
+		attendees = None
+	
 	event = {
 	'summary': cstr(frappe.db.get_value("Global Defaults",None,"default_company")),
 	'location': cstr(frappe.db.get_value("Global Defaults",None,"default_company"))+','+cstr(doc.location),
-	'description': 'Your apointment with {} of service {}'.format(cstr(doc.barber_beautician_name),cstr(doc.service)),
+	'description': 'Your apointment with {} of service {}.Customer Detail Email : {} & Mobile : {}'.format(cstr(doc.barber_beautician_name),cstr(doc.service),cstr(doc.customer_email),cstr(doc.customer_contact)),
 	'start': {
 		# 'dateTime': start,
 		'dateTime': start,
@@ -136,20 +163,19 @@ def insert_events(doc,access_token):
 		'dateTime': end,
 		'timeZone': frappe.db.get_value("System Settings",None,"time_zone")
 	},
-	'attendees': [
-		{'email': doc.customer_email,
-		'self':True}
-	]
+	'attendees': attendees
 	}
-
+	
 	try:
+		
 		remote_event = gcalendar.events().insert(calendarId=calendar_id, body=event).execute()
 		return remote_event
 	except Exception:
+		frappe.msgprint("in except")
 		frappe.log_error(frappe.get_traceback(), "Google Calendar Synchronization Error")
 
 @frappe.whitelist()
-def google_callback():
+def google_callback(code=None):
 
 	if code is None:
 		return {
@@ -303,72 +329,9 @@ def send_email(doc):
 		subject="Antonio Barber appointment Cancelled",
 		message="Hello,new appointment-{} has been cancelled.".format(doc.name))
 
-
-@frappe.whitelist()
-def set_google_calender_event():
-	creds = None
-	SCOPES = ['https://www.googleapis.com/auth/calendar']
-	CLIENT_SECRET_FILE = 'credentials.json'
-	APPLICATION_NAME = 'Antonio Barber'
-	event_object = {
-	'summary': 'Antonio barber appointment',
-	'location': 'Antonio barber shop',
-	'description': 'Be ready to reinvent your style',
-	'start': {
-		'dateTime': '2019-02-05T09:00:00+05:30',
-		'timeZone': 'Asia/Kolkata',
-	},
-	'end': {
-		'dateTime': '2019-02-05T09:30:00+05:30',
-		'timeZone': 'Asia/Kolkata',
-	},
-	'attendees': [
-		{'email': 'raj.tailor@augustinfotechteam.com'}
-	],
-	'reminders': {
-		'useDefault': False,
-		'overrides': [
-		{'method': 'email', 'minutes': 24 * 60},
-		{'method': 'popup', 'minutes': 10},
-		],
-	},
-	}
-	
-	# try:
-	# 	import argparse		
-	# 	flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-	# except ImportError:
-	# 	flags = None
-		
-	
-	
-	if os.path.exists('token.pickle'):
-		with open('token.pickle', 'rb') as token:
-			creds = pickle.load(token)
-	
-	if not creds or not creds.valid:
-		frappe.msgprint("in-fun0")
-		frappe.msgprint(cstr(creds))
-		if not creds:
-			directory_path = frappe.get_site_path('public', 'credentials')
-			cred_file_path = os.path.join(cstr(directory_path), cstr('credentials.json'))
-			
-			flow = InstalledAppFlow.from_client_secrets_file(cred_file_path, SCOPES)
-			# frappe.throw("Hello 3")
-			creds = flow.run_local_server()
-			frappe.throw("Hello 4")
-        else:
-			frappe.msgprint("in-fun2")	
-			creds.refresh(Request())
-			frappe.msgprint("in-fun1")
-        # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-	
-	service = build('calendar', 'v3', credentials=creds)
-	event = service.events().insert(calendarId='primary', body=event_object).execute()
-	frappe.msgprint('Event created: {}'.format((event.get('htmlLink'))))
-	
+# ---------------------------------------------------------------------------
+# E mail tomorrows agenda to the employee
+# --------------------------------------------------------------------------- */	
 def send_event_summary_mail():
 	from datetime import date
 	tomorrow = date.today() + timedelta(1)
@@ -386,3 +349,62 @@ def send_event_summary_mail():
 			recipients=cstr(mail['email']),
 			subject='Tommorow Agenda',
 			message="Dear {},<br/>Here is the summary of your tommorow's agenda.{}".format(cstr(mail['first_name']),event_string_concated))
+
+# ---------------------------------------------------------------------------
+# Mapping Event to sales invoice
+#
+# NOTE: We have make Event Detail child table here to map the item with Sales Invoice Item as doctype field to child table field mapping is not possible.
+# --------------------------------------------------------------------------- */
+@frappe.whitelist()		
+def make_invoice(source_name, target_doc=None, ignore_permissions=False):
+	
+	def postprocess(source, target):
+		pass
+
+	def set_missing_values(source, target):
+		pass
+
+	def update_item(source, target, source_parent):
+		pass
+
+	doclist = get_mapped_doc("Event", source_name, {
+		"Event": {
+			"doctype": "Sales Invoice",
+			"field_map": {
+				"customer": "customer",
+				"location":"territory",
+				"appointment_date":"posting_date",
+				"appointment_time":"posting_time",
+				"appointment_date":"due_date",
+				"pos_profile":"pos_profile",
+				"is_pos":"is_pos",
+				"price_list":"selling_price_list"
+			},
+			"validation": {
+				"workflow_state": ["=", "Approved"]
+			},
+			"condition":lambda doc: doc.sales_invoice != None or doc.sales_invoice != ''
+		},
+		"Event Detail": {
+			"doctype": "Sales Invoice Item",
+			"field_map": {
+				"item_code": "item_code",
+				"qty": "qty"
+			}
+		}
+	}, target_doc, postprocess, ignore_permissions=ignore_permissions)
+
+	return doclist
+
+
+def check_email(email):
+    match_grp = re.match(r'(.*)@(.*)', email)
+    records = dns.resolver.query(match_grp.group(2), 'MX')
+    mxRecord = records[0].exchange
+    mxRecord = str(mxRecord)
+    print(mxRecord)
+    searchObj = re.search( r'google', mxRecord)
+    if searchObj != None:
+        return True
+    else:
+        return False

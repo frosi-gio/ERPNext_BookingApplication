@@ -11,11 +11,26 @@ from frappe import _
 import frappe.defaults
 from six.moves import urllib
 from erpnext.accounts.utils import get_fiscal_year
+import requests
 
-def validate(self, method):
+
+ 
+PRODUCT_API_URL_LOCAL = frappe.db.get_value("Booking Settings",None,"product_api")
+PRODUCT_API_URL_LIVE=cstr(frappe.db.get_value("Booking Settings",None,"product_api"))
+
+def validate(self,method):
+
+	frappe.msgprint(PRODUCT_API_URL_LIVE)
+	get_all_employee(self)
 	
+	
+	# frappe.throw(cstr(self))
 	add_item_to_employee(self)
-	
+
+	if frappe.db.exists("Item",self.name) != None:
+		# frappe.msgprint("second time call")
+		add_item_to_wordpress(self)
+
 	# Get if the item group is an activity or not.
 	is_activity = frappe.db.get_value("Item Group", self.item_group, "is_activity")
 	
@@ -44,7 +59,7 @@ def add_item_to_employee(self):
 				
 				insert_employee = {
 					"service":str(self.name),
-					"billing_rate":0,
+					"billing_rate":emp.billing_rate,
 					"category":str(self.item_group),
 					"is_provided":"Yes"
 				}
@@ -53,7 +68,18 @@ def add_item_to_employee(self):
 				Employee.flags.ignore_permissions = True
 				Employee.save()
 				frappe.db.commit()
-				
+
+			#if services exist in employee then update service rate
+			elif frappe.db.get_value("Services", {"parent":cstr(emp.provider),"service":cstr(self.name)}, "name"):
+
+				services = frappe.get_doc("Services",{"parent":emp.provider, "service":self.name, "is_provided":"Yes"})
+				services.billing_rate = emp.billing_rate
+				services.save()
+				frappe.db.commit()
+
+				Employee = frappe.get_doc("Employee",emp.provider)
+				Employee.save()
+				frappe.db.commit()
 
 			#check if services type exist in employee or not
 			if not frappe.db.get_value("Services Type", {"parent":str(emp.provider),"services":str(self.item_group)}, "name"):
@@ -71,7 +97,7 @@ def add_item_to_employee(self):
 
 			#check if Activity cost exist of employee or not
 			if not frappe.db.get_value("Activity Cost", {"employee":emp.provider,"activity_type":self.name}, "name"):					
-				enter_activity_cost(self,str(emp.provider),0,str(self.name))
+				enter_activity_cost(self,str(emp.provider),emp.billing_rate,str(self.name))
 
 
 
@@ -86,8 +112,65 @@ def enter_activity_cost(self,employee,billing_rate,activity):
 	activity_cost.flags.ignore_permissions = True
 	activity_cost.insert()
 
+@frappe.whitelist()
+def update_product_id(name, id):
+	frappe.db.set_value("Item", name, "website_product_id", id)
+	frappe.db.commit()
+	item_doc=frappe.get_doc("Item",name,"name")
+	item_doc.flags.ignore_permissions = True
+	item_doc.save()
+
+def after_insert(self, method):
+	# frappe.msgprint("first time")
+	add_item_to_wordpress(self)
+	pass
+
+def add_item_to_wordpress(self):
+	if self.show_in_website == 1:
+		# frappe.msgprint("http://192.168.123.72:5151"+self.image)
+		data_object = {
+        "product_title" : self.item_name,
+        "product_sku" : self.name,
+		"price":self.standard_rate,
+		"product_desc":self.web_long_description,
+		"product_image":"http://192.168.123.72:5151"+cstr(self.image),
+		"category": "test,test2",
+		"tag": "testtag, test2"
+		# "product_image":frappe.utils.get_url()+self.image
+
+		}
+
+		headers_content = {
+        'Content-Type': 'application/json',
+    	}
+		response_data = requests.post(PRODUCT_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
+		frappe.msgprint(cstr(response_data.text))
+		# frappe.show_alert({message:__("Created in website"),indicator:'green'})
 
 
+def after_delete(self, method):
+	frappe.msgprint("after_delete")
+	data_object = {
+        
+     	"product_sku" : [self.name],
+		"delete_product":"yes"
+	}
+	headers_content = {
+	'Content-Type': 'application/json',
+	}
+	response_data = requests.post(PRODUCT_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
+	frappe.msgprint(cstr(response_data.text))
 
-	
+# def on_trash(self,method):
+# 	frappe.msgprint("on_trash")
+
+
+def get_all_employee(self):
+	employee = frappe.get_all('Employee',filters={'is_service_provider':1},fields=['employee_name','name'])
+	for emp in employee:
+		self.set('service_provider', [])
+		service_provider = self.append('service_provider', {})
+		service_provider.provider = emp.name
+
+
 	

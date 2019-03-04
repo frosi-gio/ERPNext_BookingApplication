@@ -1,0 +1,67 @@
+[
+ {
+  "docstatus": 0, 
+  "doctype": "Workflow", 
+  "document_type": "Event", 
+  "is_active": 1, 
+  "modified": "2019-01-28 08:17:09.450403", 
+  "name": "Event workflow", 
+  "override_status": 0, 
+  "states": [
+   {
+    "allow_edit": "System Manager", 
+    "doc_status": "0", 
+    "message": null, 
+    "state": "Opened", 
+    "update_field": null, 
+    "update_value": null
+   }, 
+   {
+    "allow_edit": "System Manager", 
+    "doc_status": "0", 
+    "message": null, 
+    "state": "Approved", 
+    "update_field": null, 
+    "update_value": null
+   }, 
+   {
+    "allow_edit": "System Manager", 
+    "doc_status": "0", 
+    "message": null, 
+    "state": "Rejected", 
+    "update_field": null, 
+    "update_value": null
+   }, 
+   {
+    "allow_edit": "System Manager", 
+    "doc_status": "0", 
+    "message": null, 
+    "state": "Cancelled", 
+    "update_field": null, 
+    "update_value": null
+   }
+  ], 
+  "transitions": [
+   {
+    "action": "Approve", 
+    "allowed": "System Manager", 
+    "next_state": "Approved", 
+    "state": "Opened"
+   }, 
+   {
+    "action": "Reject", 
+    "allowed": "System Manager", 
+    "next_state": "Rejected", 
+    "state": "Opened"
+   }, 
+   {
+    "action": "Cancel", 
+    "allowed": "System Manager", 
+    "next_state": "Cancelled", 
+    "state": "Opened"
+   }
+  ], 
+  "workflow_name": "Event workflow", 
+  "workflow_state_field": "workflow_state"
+ }
+]
