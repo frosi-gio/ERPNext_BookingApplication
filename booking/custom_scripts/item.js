@@ -12,12 +12,24 @@
 cur_frm.add_fetch('item_group','is_activity','is_service')
 cur_frm.add_fetch('item_group','is_product_group','is_product')
 
+
 frappe.ui.form.on('Item', {
 	refresh: function(frm) {
 		// create_item_in_website(frm.doc)
 		//frm.refresh_field("items");
 		//frm.reload_doc()
-		console.log("refresh")
+		// console.log("refresh")
+	},
+	onload: function(frm) {
+		if(!frm.doc.__islocal == 1)
+		{
+			cur_frm.set_df_property("all_staff_provide", "read_only",1)
+			cur_frm.set_df_property("service_provider", "read_only",1)
+			var provider = frappe.meta.get_docfield("Service Provider","provider", cur_frm.doc.name)
+			provider.read_only = 1
+			var billing_rate = frappe.meta.get_docfield("Service Provider","billing_rate", cur_frm.doc.name)
+			billing_rate.read_only = 1
+		}
 	}
 
 });
@@ -54,8 +66,6 @@ var create_item_in_website = function(doc){
 		    	if(data["product_id"])
 
 		    	{	
-		    		console.log(data)
-	  
 		       		cur_frm.set_value('website_product_id', data["product_id"]);
 					cur_frm.refresh();
 					refresh_field("website_product_id");
@@ -89,7 +99,6 @@ var delete_item = function(doctype,docname){
 	    processData: false,
 	    success: function( data, textStatus, jQxhr ){
 	    	if(data.status == 200){
-			console.log(data);
 			frappe.show_alert({message: __("Deleted"), indicator: 'red'});
 			}
 	    },
@@ -99,32 +108,25 @@ var delete_item = function(doctype,docname){
 	});
 }
 
-frappe.ui.form.on("Item", "all_staff_provide", function(doc)
+cur_frm.cscript.all_staff_provide = function(doc,dt,dn)
 {  
-
-console.log(doc.all_staff_provide)	
-
-	console.log("hi")
-
-frappe.call({
-
-	method : 'get_all_employee',
-	doc:doc,
-	args:{},
-	callback: (r) => {
-		console.log(r.message)
-
-		
-
-
-		// console.log(r.message[0]['name'])
-		// var newrow = frappe.model.add_child(doc, "Service Provider", "provider");
-		// newrow.provider = r.message[0]['name'];
-		// newrow.provider_name = r.message[0]['employee_name']
-		// newrow.
-		// refresh_field("provider");
+	if(doc.all_staff_provide)
+	{
+		frappe.call({
+			method: "booking.booking.item.get_all_employee",
+			args: {},
+			callback: function(r) {
+				for(var item in r.message)
+				{
+					var newrow = frappe.model.add_child(doc, "Service Provider", "service_provider");
+					newrow.provider = r.message[item]['name'];
+					newrow.provider_name = r.message[item]['employee_name'];
+					newrow.billing_rate = doc.standard_rate;
+					refresh_field("service_provider");
+				}
+			}
+		})
 	}
-})
 
-});
+}
 

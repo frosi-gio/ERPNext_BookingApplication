@@ -97,7 +97,8 @@ doc_events = {
 	},
 	"Employee":{
 		"validate" : "booking.booking.employee.validate",
-		"on_update" : "booking.booking.employee.on_update"
+		"on_update" : "booking.booking.employee.on_update",
+		"after_insert": "booking.booking.employee.after_insert",
 	},
 	"Event":{
 		"validate" : "booking.booking.event.validate",
@@ -119,7 +120,11 @@ doc_events = {
 		"validate" : "booking.booking.sales_person.validate"
 	},
 	"Sales Invoice":{
-		"validate" : "booking.booking.sales_invoice.validate"
+		"validate" : "booking.booking.sales_invoice.validate",
+		"after_insert" : "booking.booking.sales_invoice.after_insert"
+	},
+	"Territory":{
+		"validate" : "booking.booking.territory.validate"
 	},
 }
 

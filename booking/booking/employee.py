@@ -12,7 +12,55 @@ import frappe.defaults
 import frappe.desk.reportview
 
 def validate(doc, method):
+	if doc.is_service_provider and not hasattr(doc, '__islocal'):
+		# ---------------------------------------------------------------------------
+		# create activity cost
+		# --------------------------------------------------------------------------- */
+		for service in doc.services:
+			activity_cost = frappe.db.get_value("Activity Cost", {"employee":doc.name,"activity_type":service.service}, "name")
+			
+			if not activity_cost:
+				activity_cost = frappe.get_doc({
+						"doctype":"Activity Cost",
+						"activity_type":service.service,
+						"billing_rate":service.billing_rate,
+						"employee":doc.name
+					})
+				activity_cost.flags.ignore_permissions = True
+				activity_cost.insert()
+			
+			if activity_cost:
+				frappe.db.set_value("Activity Cost", str(activity_cost), "billing_rate", service.billing_rate)
+				frappe.db.commit()
 
+		# ---------------------------------------------------------------------------
+		# create price list
+		# --------------------------------------------------------------------------- */
+		if not frappe.db.get_value("Price List",doc.employee_name,"name"):
+			create_employee_price_list(doc)
+		
+		# ---------------------------------------------------------------------------
+		# create item price
+		# --------------------------------------------------------------------------- */	
+		create_update_item_price(doc)
+
+		# ---------------------------------------------------------------------------
+		# create pos profile
+		# --------------------------------------------------------------------------- */
+		if not frappe.db.get_value("POS Profile", {"employee":cstr(doc.employee)}, "name"):
+			create_pos_profile(doc)
+
+		doc.company = frappe.db.get_value("Branch", doc.branch, "company")
+		frappe.db.set_value("Employee", cstr(doc.name), "company", frappe.db.get_value("Branch", doc.branch, "company"))
+		frappe.db.commit()
+
+		# ---------------------------------------------------------------------------
+		# create sales person
+		# --------------------------------------------------------------------------- */
+		if not frappe.db.get_value("Sales Person", {"employee":cstr(doc.employee)}, "name"):
+			create_sales_person(doc,method)
+
+def  after_insert(doc, method):
 	if doc.is_service_provider:
 		# ---------------------------------------------------------------------------
 		# create activity cost

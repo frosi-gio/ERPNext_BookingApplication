@@ -28,6 +28,11 @@ def validate(self, method):
 		if not self.territory:
 			self.territory = territory
 
+def after_insert(self, method):
+	if self.event_id:
+		frappe.db.set_value("Event", str(self.event_id), "sales_invoice", self.name)
+		frappe.db.commit()
+
 
 
 

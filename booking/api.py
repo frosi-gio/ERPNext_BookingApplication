@@ -133,6 +133,28 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
         slot_time = TimeToDecimal(slot['from_time'])
         if (flt(start_time) <= flt(slot_time)) and (flt(end_time) > flt(slot_time)):
           slot['is_available'] = 0
+    
+    # Code to disable the time slot which don't have enough time to complete the appointment START.
+    day_end_time_decimal = TimeToDecimal(get_day_end_time(date, barber_beautician))
+          
+    for slot in available_slots:
+    
+      start_time = TimeToDecimal(slot['from_time'])
+      end_time = flt(TimeToDecimal(slot['from_time'])) + flt(service_durations)/60
+      
+      if slot['is_available'] == 1:
+      
+        for s in available_slots:
+        
+          slot_time = TimeToDecimal(s['from_time'])
+          
+          if start_time <= slot_time and end_time > slot_time:
+            if s['is_available'] == 0:
+              slot['is_available'] = 0
+                
+      if end_time > day_end_time_decimal:
+        slot['is_available'] = 0
+    # Code to disable the time slot which don't have enough time to complete the appointment END.     
 
     result_dict[str(date)] = {
       "day":weekday,

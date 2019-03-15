@@ -68,7 +68,8 @@ def validate(doc, method):
 		territory = frappe.get_doc({
 					"doctype":"Territory",
 					"territory_name": doc.name,
-					"parent_territory": 'All Territories'
+					"parent_territory": 'All Territories',
+					"is_permitted":1
 				})
 		territory.flags.ignore_permissions = True
 		territory.insert()

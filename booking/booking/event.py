@@ -49,6 +49,7 @@ def validate(doc, method):
 	if not len(doc.event_detail):
 		event_detail = doc.append('event_detail', {})
 		event_detail.item_code = doc.service
+		event_detail.qty = flt(1)
 
 	if doc.barber__beautician:
 		if not doc.pos_profile:
@@ -56,6 +57,40 @@ def validate(doc, method):
 			doc.pos_profile = pos_profile
 			frappe.db.set_value("Event", doc.name, "pos_profile", pos_profile)
 			frappe.db.commit()
+			
+	style_dict = {"Opened":"#7575ff","Cancelled":"#ff4d4d","Approved":"#6be273"}
+
+	doc.color = style_dict[doc.workflow_state]
+	frappe.db.set_value("Event", doc.name, "color", style_dict[doc.workflow_state])
+
+	if doc.workflow_state == "Approved":
+		if access_token:
+		# Insert event in google calendar
+		created_calendar_event = insert_events(doc,access_token)
+		if created_calendar_event:
+			doc.google_event_id = created_calendar_event["id"]
+			frappe.db.set_value("Event", doc.name, "google_event_id", created_calendar_event["id"])
+			frappe.db.commit()
+
+			gcalendar_event_link = "<a href='"+ cstr(created_calendar_event["htmlLink"]) +"' target='_blank'>"+ cstr(created_calendar_event["htmlLink"]) +"</a>"
+
+			doc.google_calendar_event_url = gcalendar_event_link
+			frappe.db.set_value("Event", doc.name, "google_calendar_event_url", gcalendar_event_link)
+			frappe.db.commit()
+
+	# if doc.workflow_state == "Cancelled":
+	# 	access_token = get_access_token()
+	# 	credentials_dict = {
+	# 	'token': access_token,
+	# 	'refresh_token': refresh_token,
+	# 	'token_uri': 'https://www.googleapis.com/oauth2/v4/token',
+	# 	'client_id': client_id,
+	# 	'client_secret': client_secret,
+	# 	'scopes':SCOPES
+	# 	}
+	# 	credentials = google.oauth2.credentials.Credentials(**credentials_dict)
+	# 	gcalendar = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
+	# 	gcalendar.events().delete(calendarId=calendar_id, eventId=doc.google_event_id).execute()
 
 
 def after_delete(doc, method):
@@ -73,22 +108,32 @@ def after_delete(doc, method):
 	gcalendar.events().delete(calendarId=calendar_id, eventId=doc.google_event_id).execute()
 
 def after_insert(doc, method):
+	pass
 	# Get access token
 	
-	access_token = get_access_token()
-	if access_token:
-		# Insert event in google calendar
-		created_calendar_event = insert_events(doc,access_token)
-		if created_calendar_event:
-			doc.google_event_id = created_calendar_event["id"]
-			frappe.db.set_value("Event", doc.name, "google_event_id", created_calendar_event["id"])
-			frappe.db.commit()
+	# access_token = get_access_token()
+	# if access_token:
+	# 	# Insert event in google calendar
+	# 	created_calendar_event = insert_events(doc,access_token)
+	# 	if created_calendar_event:
+	# 		doc.google_event_id = created_calendar_event["id"]
+	# 		frappe.db.set_value("Event", doc.name, "google_event_id", created_calendar_event["id"])
+	# 		frappe.db.commit()
 
-			gcalendar_event_link = "<a href='"+ cstr(created_calendar_event["htmlLink"]) +"' target='_blank'>"+ cstr(created_calendar_event["htmlLink"]) +"</a>"
+	# 		gcalendar_event_link = "<a href='"+ cstr(created_calendar_event["htmlLink"]) +"' target='_blank'>"+ cstr(created_calendar_event["htmlLink"]) +"</a>"
 
-			doc.google_calendar_event_url = gcalendar_event_link
-			frappe.db.set_value("Event", doc.name, "google_calendar_event_url", gcalendar_event_link)
-			frappe.db.commit()
+	# 		doc.google_calendar_event_url = gcalendar_event_link
+	# 		frappe.db.set_value("Event", doc.name, "google_calendar_event_url", gcalendar_event_link)
+	# 		frappe.db.commit()
+
+@frappe.whitelist()			
+def cancel_request(name, cancel_reason):
+	style_dict = {"Opened":"#7575ff","Cancelled":"#ff4d4d","Approved":"#6be273"}
+	
+	frappe.db.set_value("Event", name, "color", style_dict["Cancelled"])
+	frappe.db.set_value("Event", name, 'cancel_reason', cancel_reason)
+	frappe.db.set_value("Event", name, 'workflow_state', 'Cancelled')
+	frappe.db.commit()
 
 def get_access_token():
 	if not refresh_token:
@@ -378,7 +423,8 @@ def make_invoice(source_name, target_doc=None, ignore_permissions=False):
 				"appointment_date":"due_date",
 				"pos_profile":"pos_profile",
 				"is_pos":"is_pos",
-				"price_list":"selling_price_list"
+				"price_list":"selling_price_list",
+				"name":"event_id"
 			},
 			"validation": {
 				"workflow_state": ["=", "Approved"]

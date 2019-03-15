@@ -58,7 +58,7 @@ frappe.ui.form.on("Services Type", "services_type_add", function(doc,cdt,cdn) {
 });
 
 frappe.ui.form.on("Services Type", "services_type_remove", function(doc,cdt,cdn) {
-	console.log(doc.service_type)
+	// console.log(doc.service_type)
 	//cur_frm.cscript.services
 });
 

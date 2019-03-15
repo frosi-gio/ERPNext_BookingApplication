@@ -9,7 +9,6 @@ import requests
 
 @frappe.whitelist()
 def save_customer_password(doc_name,password,user_id):
-    
     frappe.db.set_value("Customer",doc_name,"customer_password",password)
     frappe.db.set_value("Customer",doc_name,"website_userid",user_id)
     frappe.db.commit()

@@ -7,10 +7,13 @@ frappe.ui.form.on('Event', {
 		}
 	},
 	refresh:function(frm,dt,dn){
-		if(frm.doc.workflow_state == "Approved") {
+		if(frm.doc.workflow_state == "Approved" && !frm.doc.sales_invoice) {
 			frm.add_custom_button(__('Make Invoice'), function() { 
 				make_invoice(frm,dt,dn)
 			  });
+		}
+		if(frm.doc.workflow_state == 'Opened' && frappe.user.has_role(['System Manager']) && !frm.is_new()) {
+			cur_frm.add_custom_button(__('Cancel'), cur_frm.cscript['Cancel Request']).addClass("btn-danger");;
 		}
 	},
 	check_availability: function(frm) {
@@ -70,18 +73,18 @@ frappe.ui.form.on('Event', {
 
 		// Show availability of barber.
 		function show_availability(data) {
-			
+			var date_for_popup = new Date(frm.doc.appointment_date)
 			var d = new frappe.ui.Dialog({
-				title: __("Available slots"),
+				title: __("Available slots - "+ formatDate(date_for_popup)),
 				fields: [{ fieldtype: 'HTML', fieldname: 'available_slots'}],
 				primary_action_label: __("Book"),
 				primary_action: function() {	
 
 					// Check if selected time slot has enough time to complete the service else return. If service duration will conflict with appointed slots then it will return of throw the message.
-					var start_time = timeToDecimal(selected_slot)
-					var end_time = timeToDecimal(selected_slot) + flt(frm.doc.duration/60)
+					/*var start_time = timeToDecimal(selected_slot)
+					var end_time = timeToDecimal(selected_slot) + flt(frm.doc.duration/60)*/
 
-					for (var i = 0; i < button_list.length; i++) { 
+					/*for (var i = 0; i < button_list.length; i++) { 
 
 						var button_time = timeToDecimal(button_list[i])
 						
@@ -96,13 +99,13 @@ frappe.ui.form.on('Event', {
 								frappe.throw(__("Selected time slot has not enough time to complete <b>"+ cstr(service) + " [ " +cstr(frm.doc.duration) + " minutes ]" +"</b>. Please select another time slot to book."))
 							}
 						}
-					}
+					}*/
 
 					// Check if selected time slot and service duration is conflict with the end time of the day. throw message if yes.
-					if (end_time > day_end_time_decimal)
+					/*if (end_time > day_end_time_decimal)
 					{
 						frappe.throw(__("Selected time slot has not enough time to complete <b>"+ cstr(service) + " [ " +cstr(frm.doc.duration) + " minutes ]" +"</b>. Employee will not available after <b>" + cstr(day_end_time) + "</b>. Please select another time slot to book."))
-					}
+					}*/
 
 					frm.set_value('appointment_time', selected_slot);
 					frm.set_value('duration', data.duration_of_service);
@@ -264,12 +267,80 @@ frappe.ui.form.on('Event', {
 	
 });
 
+// Format date 'day month_name year'
+function formatDate(date) {
+  var monthNames = [
+    "January", "February", "March",
+    "April", "May", "June", "July",
+    "August", "September", "October",
+    "November", "December"
+  ];
+
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
+
+  return day + ' ' + monthNames[monthIndex] + ' ' + year;
+}
+
 // Function to convert the hours in decimal.
 function timeToDecimal(t) {
     var arr = t.split(':');
     var dec = parseInt((arr[1]/6)*10, 10);
 
     return parseFloat(parseInt(arr[0], 10) + '.' + (dec<10?'0':'') + dec);
+}
+
+// Cancel Request Button
+cur_frm.cscript['Cancel Request'] = function(){
+	var dialog = new frappe.ui.Dialog({
+		title: "Cancel Request",
+		fields: [
+			{"fieldtype": "Small Text", "label": __("Cancel Reason"), "fieldname": "cancel_reason", "reqd": 1 },
+			{"fieldtype": "Button", "label": __("Update"), "fieldname": "update"},
+		]
+	});
+
+	dialog.fields_dict.update.$input.click(function() {
+		var args = dialog.get_values();
+		
+		if(!args) return;
+
+		frappe.call({
+			method: "booking.booking.event.cancel_request",
+			//doc: cur_frm.doc,
+			args: {"name": cur_frm.doc.name, "cancel_reason":args.cancel_reason},
+			callback: function(r) {
+				if(r.exc) {
+					frappe.msgprint(__("There are some error. Form can't be rejected."));
+					return;
+				}
+				if (r && !r.exc){
+					frappe.call({
+						method: 'frappe.core.doctype.communication.email.make',
+						args: {
+							doctype: cur_frm.doctype,
+							name: cur_frm.docname,
+							subject: format(__('Reason for Cancel')),
+							content: args.cancel_reason,
+							send_mail: false,
+							send_me_a_copy: false,
+							communication_medium: 'Other',
+							sent_or_received: 'Sent'
+						},
+						callback: function(res){
+							cur_frm.reload_doc();
+						}
+					});
+				}
+				dialog.hide();
+				cur_frm.refresh();
+			},
+			btn: this
+		})
+
+	});
+	dialog.show();
 }
 
 cur_frm.fields_dict.location.get_query = function(doc) {

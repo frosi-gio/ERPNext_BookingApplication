@@ -15,13 +15,12 @@ import requests
 
 
  
-PRODUCT_API_URL_LOCAL = frappe.db.get_value("Booking Settings",None,"product_api")
 PRODUCT_API_URL_LIVE=cstr(frappe.db.get_value("Booking Settings",None,"product_api"))
 
 def validate(self,method):
 
-	frappe.msgprint(PRODUCT_API_URL_LIVE)
-	get_all_employee(self)
+	# frappe.msgprint(PRODUCT_API_URL_LIVE)
+	# get_all_employee(self, method)
 	
 	
 	# frappe.throw(cstr(self))
@@ -29,8 +28,10 @@ def validate(self,method):
 
 	if frappe.db.exists("Item",self.name) != None:
 		# frappe.msgprint("second time call")
-		add_item_to_wordpress(self)
-
+		if PRODUCT_API_URL_LIVE:
+			
+			add_item_to_wordpress(self)
+		
 	# Get if the item group is an activity or not.
 	is_activity = frappe.db.get_value("Item Group", self.item_group, "is_activity")
 	
@@ -45,7 +46,6 @@ def validate(self,method):
 			})
 		activity_type.flags.ignore_permissions = True
 		activity_type.insert()
-
 
 # ---------------------------------------------------------------------------
 # Add Item and Item group Into Employee child table , Create Activity cost
@@ -120,10 +120,20 @@ def update_product_id(name, id):
 	item_doc.flags.ignore_permissions = True
 	item_doc.save()
 
+@frappe.whitelist()
+def get_all_employee():
+	employee = frappe.get_all('Employee',filters={'is_service_provider':1},fields=['employee_name','name'])
+	
+	if employee:
+		return employee
+
 def after_insert(self, method):
 	# frappe.msgprint("first time")
-	add_item_to_wordpress(self)
-	pass
+	if PRODUCT_API_URL_LIVE:
+		
+		add_item_to_wordpress(self)
+	
+	
 
 def add_item_to_wordpress(self):
 	if self.show_in_website == 1:
@@ -133,10 +143,10 @@ def add_item_to_wordpress(self):
         "product_sku" : self.name,
 		"price":self.standard_rate,
 		"product_desc":self.web_long_description,
-		"product_image":"http://192.168.123.72:5151"+cstr(self.image),
+		# "product_image":"http://192.168.123.72:5151"+cstr(self.image),
 		"category": "test,test2",
-		"tag": "testtag, test2"
-		# "product_image":frappe.utils.get_url()+self.image
+		"tag": "testtag, test2",
+		"product_image":frappe.utils.get_url()+cstr(self.image)
 
 		}
 
@@ -144,7 +154,7 @@ def add_item_to_wordpress(self):
         'Content-Type': 'application/json',
     	}
 		response_data = requests.post(PRODUCT_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
-		frappe.msgprint(cstr(response_data.text))
+		# frappe.msgprint(cstr(response_data.text))
 		# frappe.show_alert({message:__("Created in website"),indicator:'green'})
 
 
@@ -160,17 +170,6 @@ def after_delete(self, method):
 	}
 	response_data = requests.post(PRODUCT_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
 	frappe.msgprint(cstr(response_data.text))
-
-# def on_trash(self,method):
-# 	frappe.msgprint("on_trash")
-
-
-def get_all_employee(self):
-	employee = frappe.get_all('Employee',filters={'is_service_provider':1},fields=['employee_name','name'])
-	for emp in employee:
-		self.set('service_provider', [])
-		service_provider = self.append('service_provider', {})
-		service_provider.provider = emp.name
 
 
 	
