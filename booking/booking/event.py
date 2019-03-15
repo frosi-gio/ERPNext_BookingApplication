@@ -66,17 +66,17 @@ def validate(doc, method):
 	if doc.workflow_state == "Approved":
 		if access_token:
 		# Insert event in google calendar
-		created_calendar_event = insert_events(doc,access_token)
-		if created_calendar_event:
-			doc.google_event_id = created_calendar_event["id"]
-			frappe.db.set_value("Event", doc.name, "google_event_id", created_calendar_event["id"])
-			frappe.db.commit()
+			created_calendar_event = insert_events(doc,access_token)
+			if created_calendar_event:
+				doc.google_event_id = created_calendar_event["id"]
+				frappe.db.set_value("Event", doc.name, "google_event_id", created_calendar_event["id"])
+				frappe.db.commit()
 
-			gcalendar_event_link = "<a href='"+ cstr(created_calendar_event["htmlLink"]) +"' target='_blank'>"+ cstr(created_calendar_event["htmlLink"]) +"</a>"
+				gcalendar_event_link = "<a href='"+ cstr(created_calendar_event["htmlLink"]) +"' target='_blank'>"+ cstr(created_calendar_event["htmlLink"]) +"</a>"
 
-			doc.google_calendar_event_url = gcalendar_event_link
-			frappe.db.set_value("Event", doc.name, "google_calendar_event_url", gcalendar_event_link)
-			frappe.db.commit()
+				doc.google_calendar_event_url = gcalendar_event_link
+				frappe.db.set_value("Event", doc.name, "google_calendar_event_url", gcalendar_event_link)
+				frappe.db.commit()
 
 	# if doc.workflow_state == "Cancelled":
 	# 	access_token = get_access_token()
