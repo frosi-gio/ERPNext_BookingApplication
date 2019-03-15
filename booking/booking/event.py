@@ -24,7 +24,7 @@ import dns.resolver
 
 
 # Google calendar setup global variables.
-redirect_uri = "https://erp.antoniosbarber.com:3232/?cmd=booking.booking.event.google_callback"
+redirect_uri = cstr(frappe.utils.get_url())+"?cmd=booking.booking.event.google_callback"
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events'
 client_id = frappe.db.get_value("Booking Settings", None, "client_id")
 client_secret = frappe.db.get_value("Booking Settings", None, "client_secret")
@@ -32,6 +32,9 @@ refresh_token = frappe.db.get_value("Booking Settings", None, "refresh_token")
 calendar_id = frappe.db.get_value("Booking Settings", None, "calendar_id")
 
 def validate(doc, method):
+	
+	# frappe.msgprint(cstr(frappe.utils.get_url()))
+
 	send_event_summary_mail()
 	
 	send_email(doc)
@@ -229,27 +232,27 @@ def google_callback(code=None):
 			}
 	else:
 		try:
-			data = {'code': '4/DgEjDdHQwItZnMINCfTjDYiDTJJ2BkZ8V1oCC-I0d0s3Jb7hI7Aj9YTtEppTzaHdyUWOTU3ZSKYoCgXcGW4tySU',
+			data = {'code': code,
 				'client_id': client_id,
 				'client_secret': client_secret,
 				'redirect_uri': redirect_uri,
 				'grant_type': 'authorization_code'}
 			r = requests.post('https://www.googleapis.com/oauth2/v4/token', data=data).json()
 			
-			#frappe.db.set_value("Booking Settings", None, "code", code)
+			frappe.db.set_value("Booking Settings", None, "code", code)
 			frappe.msgprint(cstr(r))
 			if 'access_token' in r:
 				pass
-				# frappe.db.set_value("Booking Settings", None, "access_token", r['access_token'])
+				frappe.db.set_value("Booking Settings", None, "access_token", r['access_token'])
 			if 'refresh_token' in r:
 				pass
-				# frappe.db.set_value("Booking Settings", None, "refresh_token", r['refresh_token'])
+				frappe.db.set_value("Booking Settings", None, "refresh_token", r['refresh_token'])
 			frappe.db.commit()
 			frappe.local.response["type"] = "redirect"
 			frappe.local.response["location"] = "success.html"
 			return
 		except Exception as e:
-			frappe.throw(e.message)
+			frappe.throw(e.__traceback__)
 
 
 # Get available timeslot by employee and date.
