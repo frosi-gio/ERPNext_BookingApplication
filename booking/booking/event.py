@@ -64,6 +64,7 @@ def validate(doc, method):
 	frappe.db.set_value("Event", doc.name, "color", style_dict[doc.workflow_state])
 
 	if doc.workflow_state == "Approved":
+		access_token = get_access_token()
 		if access_token:
 		# Insert event in google calendar
 			created_calendar_event = insert_events(doc,access_token)
@@ -228,17 +229,21 @@ def google_callback(code=None):
 			}
 	else:
 		try:
-			data = {'code': code,
+			data = {'code': '4/DgEjDdHQwItZnMINCfTjDYiDTJJ2BkZ8V1oCC-I0d0s3Jb7hI7Aj9YTtEppTzaHdyUWOTU3ZSKYoCgXcGW4tySU',
 				'client_id': client_id,
 				'client_secret': client_secret,
 				'redirect_uri': redirect_uri,
 				'grant_type': 'authorization_code'}
 			r = requests.post('https://www.googleapis.com/oauth2/v4/token', data=data).json()
-			frappe.db.set_value("Booking Settings", None, "code", code)
+			
+			#frappe.db.set_value("Booking Settings", None, "code", code)
+			frappe.msgprint(cstr(r))
 			if 'access_token' in r:
-				frappe.db.set_value("Booking Settings", None, "access_token", r['access_token'])
+				pass
+				# frappe.db.set_value("Booking Settings", None, "access_token", r['access_token'])
 			if 'refresh_token' in r:
-				frappe.db.set_value("Booking Settings", None, "refresh_token", r['refresh_token'])
+				pass
+				# frappe.db.set_value("Booking Settings", None, "refresh_token", r['refresh_token'])
 			frappe.db.commit()
 			frappe.local.response["type"] = "redirect"
 			frappe.local.response["location"] = "success.html"
