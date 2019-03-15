@@ -15,16 +15,16 @@ from frappe.utils import get_request_site_address
 import requests
 import googleapiclient.discovery
 import google.oauth2.credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from oauth2client import file,client,tools
+#from google_auth_oauthlib.flow import InstalledAppFlow
+#from google.auth.transport.requests import Request
+#from oauth2client import file,client,tools
 from frappe.model.mapper import get_mapped_doc
 import re
 import dns.resolver
 
 
 # Google calendar setup global variables.
-redirect_uri = get_request_site_address(True) + "?cmd=booking.booking.event.google_callback"
+redirect_uri = "https://erp.antoniosbarber.com:3232/?cmd=booking.booking.event.google_callback"
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events'
 client_id = frappe.db.get_value("Booking Settings", None, "client_id")
 client_secret = frappe.db.get_value("Booking Settings", None, "client_secret")
@@ -459,3 +459,7 @@ def check_email(email):
         return True
     else:
         return False
+
+@frappe.whitelist()
+def get_wordpress_url():
+    return cstr(frappe.get_value("Booking Settings",None,"customer_api"))
