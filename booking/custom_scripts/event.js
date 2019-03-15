@@ -354,7 +354,8 @@ cur_frm.fields_dict.location.get_query = function(doc) {
 cur_frm.fields_dict.category.get_query = function(doc) {
 	return{
 		filters:{
-			'is_group': 0
+			'is_group': 0,
+			'is_activity': 1
 		}
 	}
 }

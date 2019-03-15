@@ -113,7 +113,7 @@ def enter_activity_cost(self,employee,billing_rate,activity):
 	activity_cost.insert()
 
 @frappe.whitelist()
-def update_product_id(name, id):
+def update_product_id(self,name,id):
 	frappe.db.set_value("Item", name, "website_product_id", id)
 	frappe.db.commit()
 	item_doc=frappe.get_doc("Item",name,"name")
@@ -136,7 +136,10 @@ def after_insert(self, method):
 	
 
 def add_item_to_wordpress(self):
+	
 	if self.show_in_website == 1:
+		# frappe.msgprint(cstr(PRODUCT_API_URL_LIVE))
+		# frappe.msgprint("here1")
 		# frappe.msgprint("http://192.168.123.72:5151"+self.image)
 		data_object = {
         "product_title" : self.item_name,
@@ -154,7 +157,9 @@ def add_item_to_wordpress(self):
         'Content-Type': 'application/json',
     	}
 		response_data = requests.post(PRODUCT_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
-		# frappe.msgprint(cstr(response_data.text))
+		# update_product_id(self.name, cstr(response_data.json()['product_id']))
+		# frappe.msgprint(cstr(response_data.json()['product_id']))
+		self.website_product_id = cstr(response_data.json()['product_id'])
 		# frappe.show_alert({message:__("Created in website"),indicator:'green'})
 
 
