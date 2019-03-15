@@ -56,7 +56,7 @@ doctype_js = {
 # Generators
 # ----------
 
-fixtures = ["Workflow","Email Alert","Custom Field","Property Setter"]
+fixtures = ["Workflow","Custom Field","Property Setter"]
 
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
