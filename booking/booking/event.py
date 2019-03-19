@@ -32,7 +32,9 @@ refresh_token = frappe.db.get_value("Booking Settings", None, "refresh_token")
 calendar_id = frappe.db.get_value("Booking Settings", None, "calendar_id")
 
 def validate(doc, method):
-	
+	if not doc.customer_email or not doc.customer_contact:
+		primary_contact_url = str(frappe.utils.get_url()) + "/desk#List/Customer/" + str(doc.customer)
+		frappe.throw("Customer Email and Mobile No both are required. Please also add it into customer PRIMARY CONTACT DETAIL if not added : <a href=" + "'" + str(primary_contact_url) + "'" +">"+ str(primary_contact_url) +"</a>")
 	# frappe.msgprint(cstr(frappe.utils.get_url()))
 
 	send_event_summary_mail()
@@ -359,28 +361,39 @@ def send_email(doc):
 	employee_email = frappe.db.get_value("Employee",doc.barber__beautician,"personal_email")
 	
 	if doc.workflow_state == "Opened":
-		frappe.sendmail(recipients=customer_email,
-		subject="Antonio Barber Pending appointment",
-		message="Dear {}, Your appointment with Antonio Barber is under review.You will notify after it will accept".format(doc.customer))
-		frappe.sendmail(recipients=employee_email,
-		subject="Antonio Barber Pending appointment",
-		message="Hello,new appointment-{} has been created and its in pending state.Please review it".format(doc.name))
+		
+		if customer_email:
+			frappe.sendmail(recipients=customer_email,
+			subject="Antonio Barber Pending appointment",
+			message="Dear {}, Your appointment with Antonio Barber is under review.You will notify after it will accept".format(doc.customer))
+
+		if employee_email:	
+			frappe.sendmail(recipients=employee_email,
+			subject="Antonio Barber Pending appointment",
+			message="Hello,new appointment-{} has been created and its in pending state.Please review it".format(doc.name))
 
 	if doc.workflow_state == "Approved":
-		frappe.sendmail(recipients=customer_email,
-		subject="Antonio Barber appointment approved",
-		message="Dear {}, Your appointment with Antonio Barber is approved.".format(doc.customer))
-		frappe.sendmail(recipients=employee_email,
-		subject="Antonio Barber appointment approved",
-		message="Hello,new appointment-{} has been approved.".format(doc.name))
+
+		if customer_email:
+			frappe.sendmail(recipients=customer_email,
+			subject="Antonio Barber appointment approved",
+			message="Dear {}, Your appointment with Antonio Barber is approved.".format(doc.customer))
+
+		if employee_email:	
+			frappe.sendmail(recipients=employee_email,
+			subject="Antonio Barber appointment approved",
+			message="Hello,new appointment-{} has been approved.".format(doc.name))
 
 	if doc.workflow_state == "Cancelled":
-		frappe.sendmail(recipients=customer_email,
-		subject="Antonio Barber appointment Cancelled",
-		message="Dear {}, Your appointment with Antonio Barber is cancelled.Sorry for inconvinience".format(doc.customer))
-		frappe.sendmail(recipients=employee_email,
-		subject="Antonio Barber appointment Cancelled",
-		message="Hello,new appointment-{} has been cancelled.".format(doc.name))
+		if customer_email:
+			frappe.sendmail(recipients=customer_email,
+			subject="Antonio Barber appointment Cancelled",
+			message="Dear {}, Your appointment with Antonio Barber is cancelled.Sorry for inconvinience".format(doc.customer))
+
+		if employee_email:
+			frappe.sendmail(recipients=employee_email,
+			subject="Antonio Barber appointment Cancelled",
+			message="Hello,new appointment-{} has been cancelled.".format(doc.name))
 
 # ---------------------------------------------------------------------------
 # E mail tomorrows agenda to the employee

@@ -18,15 +18,11 @@ import requests
 PRODUCT_API_URL_LIVE=cstr(frappe.db.get_value("Booking Settings",None,"product_api"))
 
 def validate(self,method):
-
-	# frappe.msgprint(PRODUCT_API_URL_LIVE)
-	# get_all_employee(self, method)
-	
-	
 	# frappe.throw(cstr(self))
-	add_item_to_employee(self)
+	if not hasattr(self, '__islocal'):
+		add_item_to_employee(self)
 
-	if frappe.db.exists("Item",self.name) != None:
+	if not hasattr(self, '__islocal'):
 		# frappe.msgprint("second time call")
 		if PRODUCT_API_URL_LIVE:
 			
@@ -128,6 +124,7 @@ def get_all_employee():
 		return employee
 
 def after_insert(self, method):
+	add_item_to_employee(self)
 	# frappe.msgprint("first time")
 	if PRODUCT_API_URL_LIVE:
 		
@@ -141,16 +138,18 @@ def add_item_to_wordpress(self):
 		# frappe.msgprint(cstr(PRODUCT_API_URL_LIVE))
 		# frappe.msgprint("here1")
 		# frappe.msgprint("http://192.168.123.72:5151"+self.image)
+		item_grp_string = ''  
+		for item in self.website_item_groups:
+			item_grp_string = item_grp_string + item.item_group + ","
+			# frappe.msgprint(item.item_group)
 		data_object = {
         "product_title" : self.item_name,
         "product_sku" : self.name,
 		"price":self.standard_rate,
 		"product_desc":self.web_long_description,
-		# "product_image":"http://192.168.123.72:5151"+cstr(self.image),
-		"category": "test,test2",
+		"category": item_grp_string[0:len(item_grp_string)-1],
 		"tag": "testtag, test2",
 		"product_image":frappe.utils.get_url()+cstr(self.image)
-
 		}
 
 		headers_content = {
@@ -164,7 +163,6 @@ def add_item_to_wordpress(self):
 
 
 def after_delete(self, method):
-	frappe.msgprint("after_delete")
 	data_object = {
         
      	"product_sku" : [self.name],

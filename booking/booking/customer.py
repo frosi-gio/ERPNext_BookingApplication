@@ -6,6 +6,11 @@ from frappe.utils import flt, cint, cstr, add_days, getdate, get_datetime, get_t
 from frappe import _
 import frappe.defaults
 import requests
+import random
+import string
+import json
+
+Customer_API_URL_LIVE=cstr(frappe.db.get_value("Booking Settings",None,"customer_api"))
 
 @frappe.whitelist()
 def save_customer_password(doc_name,password,user_id):
@@ -23,5 +28,39 @@ def save_customer_password(doc_name,password,user_id):
 @frappe.whitelist()
 def get_wordpress_url():
     return cstr(frappe.get_value("Booking Settings",None,"customer_api"))
+
+@frappe.whitelist()
+def create_customer_wordpress(name,customer,email,mobile):
+    if Customer_API_URL_LIVE:
+        random_string = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(8)])
+        # frappe.msgprint(random_string)
+
+        data_object = {
+        "erp_user_id": cstr(name),
+        "username": cstr(customer), 
+        "email": cstr(email),
+        "password":random_string,
+        "mobile":cstr(mobile)
+        }
+
+        headers_content = {
+        'Content-Type': 'application/json',
+        }
+        response_data = requests.post(Customer_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
+        # frappe.msgprint(cstr(response_data.json()))
+        if cstr(response_data.json()['status']) == "404":
+            frappe.msgprint("Customer <b>{}</b> is already created in website".format(cstr(name)))
+        if cstr(response_data.json()['status']) == "200":
+            frappe.msgprint("Customer <b>{}</b> has been successfully created in website".format(cstr(name)))
+            customer_doc=frappe.get_doc("Customer",name)
+            customer_doc.website_userid = response_data.json()['user_id']
+            customer_doc.customer_password = random_string
+            frappe.sendmail(
+            recipients=cstr(email),
+            subject="Your Login Details",
+            message="Dear {},<br/>Your account has been setup,below is your login details<br/>ID : <b>{}</b><br/>Password : <b>{}</b>".format(cstr(customer),cstr(email),random_string))
+            customer_doc.save()
+    
+    
     
 

@@ -384,21 +384,21 @@ cur_frm.cscript.appointment_date = function(doc, dt, dn) {
 	}
 }
 
-cur_frm.cscript.create_event= function(doc,dt,dn){
-		frappe.call({
-			// type: "GET",
-			//method: "booking.booking.event.set_google_calender_event",
-			//method: "booking.booking.event.google_callback",
-			// method: "booking.booking.event.get_access_token",
-			method: "booking.booking.event.insert_events",
-			args: {},
-			callback: function(r) {
-				if (r.message){
-					msgprint("succsess")
-				}
-			}
-		})
-}
+// cur_frm.cscript.create_event= function(doc,dt,dn){
+// 		frappe.call({
+// 			// type: "GET",
+// 			//method: "booking.booking.event.set_google_calender_event",
+// 			//method: "booking.booking.event.google_callback",
+// 			// method: "booking.booking.event.get_access_token",
+// 			method: "booking.booking.event.insert_events",
+// 			args: {},
+// 			callback: function(r) {
+// 				if (r.message){
+// 					msgprint("succsess")
+// 				}
+// 			}
+// 		})
+// }
 
 var make_invoice = function(frm,dt,dn){
 	frappe.model.open_mapped_doc({

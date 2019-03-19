@@ -124,7 +124,8 @@ doc_events = {
 		"after_insert" : "booking.booking.sales_invoice.after_insert"
 	},
 	"Territory":{
-		"validate" : "booking.booking.territory.validate"
+		"validate" : "booking.booking.territory.validate",
+		"on_trash" : "booking.booking.territory.on_trash"
 	},
 }
 

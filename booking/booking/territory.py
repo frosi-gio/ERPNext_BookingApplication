@@ -16,6 +16,11 @@ def validate(self, method):
 	if not self.is_permitted:
 		frappe.throw("Not allowed to create new territory")
 
+def on_trash(self,method):
+	if cstr(frappe.session.user) != "Administrator":
+		frappe.throw("You don't have enough permission not delete the Territory")
+
+
 
 
 

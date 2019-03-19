@@ -77,6 +77,7 @@ var get_service = function(doc,cdt,cdn,service_name){
 				{
 					var newrow = frappe.model.add_child(doc, "Services", "services");
 					newrow.service = r.message[item]['name'];
+					newrow.category = service_name
 					newrow.billing_rate = 0 ;
 					refresh_field("services");
 				}
