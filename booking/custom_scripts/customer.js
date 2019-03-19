@@ -4,13 +4,11 @@ Customer_create_flag = 0
 
 frappe.ui.form.on('Customer', {
 	refresh: function(frm) {
-		//alert("hi");
-		frm.toggle_display(['address_html','contact_html','primary_contact_detail'], frm.doc.__islocal);
-		cur_frm.set_df_property("mobile_no", "read_only",0);
-
 	},
 	onload: function(frm) {
-		//alert("hi22");
+
+	
+
 	}
 });
 
