@@ -21,7 +21,7 @@ frappe.ui.form.on('Item', {
 		// console.log("refresh")
 	},
 	onload: function(frm) {
-		if(!frm.doc.__islocal == 1)
+		if(!frm.doc.__islocal)
 		{
 			cur_frm.set_df_property("all_staff_provide", "read_only",1)
 			cur_frm.set_df_property("service_provider", "read_only",1)

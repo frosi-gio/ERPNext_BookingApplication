@@ -46,6 +46,16 @@ def get_data():
 					"name": "Territory",
 					"description": _("Territory")
 				},
+				{
+					"type": "doctype",
+					"name": "Price List",
+					"description": _("Price List")
+				},
+				{
+					"type": "doctype",
+					"name": "Item Price",
+					"description": _("Item Price")
+				},
 			]
 		},
         {
@@ -91,12 +101,28 @@ def get_data():
 	
 			]
 		},
-        		{
+    		{
 			"label": _("Booking Reports"),
 			"items": [
 				{
 					"type": "report",
 					"name": "Next Day Summary",
+					"is_query_report": True
+				},
+				{
+					"type": "report",
+					"name": "Sales Register",
+					"is_query_report": True
+				},
+				{
+					"type": "page",
+					"name": "sales-analytics",
+					"label": _("Sales Analytics"),
+					"icon": "fa fa-bar-chart",
+				},
+				{
+					"type": "report",
+					"name": "Sales Person-wise Transaction Summary",
 					"is_query_report": True
 				}
 			]

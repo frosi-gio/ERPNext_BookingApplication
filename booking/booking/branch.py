@@ -36,6 +36,22 @@ def validate(doc, method):
 	frappe.db.commit()
 
 	# ---------------------------------------------------------------------------
+	# create branch price list
+	# --------------------------------------------------------------------------- */
+	branch_price_list = frappe.db.get_value("Price List", str(doc.name), "name")
+	if not branch_price_list:
+		price_list = frappe.get_doc({
+				"doctype":"Price List",
+				"price_list_name":doc.name,
+				"selling":1
+			})
+		price_list.flags.ignore_permissions = True
+		price_list.insert()
+
+	if not doc.price_list:
+		doc.price_list = price_list.name
+
+	# ---------------------------------------------------------------------------
 	# create income account
 	# --------------------------------------------------------------------------- */
 	if not frappe.db.get_value("Account", {"company":doc.company,"account_name":doc.name},"name"):

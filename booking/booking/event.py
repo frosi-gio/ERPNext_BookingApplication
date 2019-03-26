@@ -49,7 +49,8 @@ def validate(doc, method):
 	
 	#set price list by employee pos profile
 	pos_selling_price_list = frappe.db.get_value("POS Profile", {"employee":doc.barber__beautician}, "selling_price_list")
-	doc.price_list = pos_selling_price_list
+	if hasattr(doc, '__islocal'):
+		doc.price_list = pos_selling_price_list
 
 	if not len(doc.event_detail):
 		event_detail = doc.append('event_detail', {})

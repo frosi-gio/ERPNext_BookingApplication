@@ -148,7 +148,6 @@ def add_item_to_wordpress(self):
 		"price":self.standard_rate,
 		"product_desc":self.web_long_description,
 		"category": item_grp_string[0:len(item_grp_string)-1],
-		"tag": "testtag, test2",
 		"product_image":frappe.utils.get_url()+cstr(self.image)
 		}
 
@@ -163,16 +162,17 @@ def add_item_to_wordpress(self):
 
 
 def after_delete(self, method):
-	data_object = {
-        
-     	"product_sku" : [self.name],
-		"delete_product":"yes"
-	}
-	headers_content = {
-	'Content-Type': 'application/json',
-	}
-	response_data = requests.post(PRODUCT_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
-	frappe.msgprint(cstr(response_data.text))
+	if self.show_in_website == 1:
+		data_object = {
+			
+			"product_sku" : [self.name],
+			"delete_product":"yes"
+		}
+		headers_content = {
+		'Content-Type': 'application/json',
+		}
+		response_data = requests.post(PRODUCT_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
+	# frappe.msgprint(cstr(response_data.text))
 
 
 	
