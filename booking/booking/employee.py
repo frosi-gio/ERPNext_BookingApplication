@@ -265,7 +265,7 @@ def create_pos_profile(doc):
 # --------------------------------------------------------------------------- */ 
 def get_employee_name_by_service(doctype, txt, searchfield, start, page_len, filters):
 	cond = ''
-	if filters.get('service'	):
+	if filters.get('service'):
 		cond = 'and `tabServices`.service = "' + filters['service'] + '"'
 
 	return frappe.db.sql("""SELECT DISTINCT `tabEmployee`.name, `tabEmployee`.employee_name FROM `tabEmployee` LEFT JOIN `tabServices` ON `tabServices`.parent = `tabEmployee`.name

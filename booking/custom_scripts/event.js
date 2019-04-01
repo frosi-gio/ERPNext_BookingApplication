@@ -62,6 +62,31 @@ frappe.ui.form.on('Event', {
 			}
 		});
 
+		// get end time of the day.
+		var day_lunch_start_time_decimal = 0
+		var day_lunch_start_time = 0
+
+		var last_eligible_time_of_first_half = 0
+
+		frm.call({
+			method: 'booking.booking.event.get_lunch_start_time',
+			args: {
+				barber_beautician: barber__beautician,
+				date: appointment_date
+			},
+			callback: (r) => {
+				if(r.message)
+				{
+					day_lunch_start_time = r.message
+					day_lunch_start_time_decimal = timeToDecimal(r.message)
+					last_eligible_time_of_first_half = flt(day_lunch_start_time_decimal) - flt(frm.doc.duration/60)
+				}
+			}
+		});
+
+		console.log(last_eligible_time_of_first_half)
+
+
 		// Show if barber is not available.
 		function show_empty_state() {
 			frappe.msgprint({
@@ -242,6 +267,13 @@ frappe.ui.form.on('Event', {
 				}
 
 				if (end_time > day_end_time_decimal)
+				{
+					$wrapper
+					.find(`button[data-name="${button_list[i]}"]`)
+					.attr('disabled', true);
+				}
+
+				if (start_time > last_eligible_time_of_first_half && start_time <= day_lunch_start_time_decimal)
 				{
 					$wrapper
 					.find(`button[data-name="${button_list[i]}"]`)

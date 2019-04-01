@@ -136,6 +136,9 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
     
     # Code to disable the time slot which don't have enough time to complete the appointment START.
     day_end_time_decimal = TimeToDecimal(get_day_end_time(date, barber_beautician))
+
+    day_lunch_start_time_decimal = TimeToDecimal(get_lunch_start_time(date, barber_beautician))
+    last_eligible_time_of_first_half = flt(day_lunch_start_time_decimal) - flt(flt(service_durations)/60)
           
     for slot in available_slots:
     
@@ -151,9 +154,14 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
           if start_time <= slot_time and end_time > slot_time:
             if s['is_available'] == 0:
               slot['is_available'] = 0
-                
-      if end_time > day_end_time_decimal:
-        slot['is_available'] = 0
+        
+        if flt(day_end_time_decimal) > 0:   
+          if flt(end_time) > flt(day_end_time_decimal):
+            slot['is_available'] = 0
+
+        if flt(day_lunch_start_time_decimal) > 0:
+          if flt(start_time) > flt(last_eligible_time_of_first_half) and flt(start_time) <= flt(day_lunch_start_time_decimal):
+            slot['is_available'] = 0
     # Code to disable the time slot which don't have enough time to complete the appointment END.     
 
     result_dict[str(date)] = {
@@ -167,7 +175,7 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
       "is_barber_available": is_barber_available,
       "day_end_time": get_day_end_time(date, barber_beautician)
     }
-
+  
   # sorting dictionary having the date string as a key
   from datetime import datetime
   ordered_data = sorted(result_dict.items(), key = lambda x:datetime.strptime(x[0], '%Y-%m-%d'), reverse=False)
@@ -190,6 +198,28 @@ def get_day_end_time(date, barber_beautician):
   get_end_time = frappe.db.sql("""SELECT Max(`tabEmployee Schedule Time Slot`.to_time) as day_end_time FROM `tabEmployee Schedule` LEFT JOIN `tabEmployee Schedule Time Slot` ON `tabEmployee Schedule`.name = `tabEmployee Schedule Time Slot`.parent WHERE `tabEmployee Schedule`.name = %s AND `tabEmployee Schedule Time Slot`.day = %s""" ,(cstr(barber_beautician_schedule_name),cstr(weekday)),as_dict = 1)
   if get_end_time and len(get_end_time) > 0:
     return cstr(get_end_time[0]['day_end_time']) or "00:00:00"
+  else:
+    return "00:00:00"
+
+# Get end time of the day for barber.
+@frappe.whitelist(allow_guest = True)
+def get_lunch_start_time(date, barber_beautician):
+  """
+  Get lunch start time of 'Barber / Beautician' on 'date'
+  :param date: Date to check in schedule
+  :param barber_beautician: Name of the Barber / Beautician
+  :return: lunch start time of the given date
+  """
+  barber_beautician_schedule_name = frappe.db.get_value("Employee", barber_beautician, "daily_schedule_list")
+  date = getdate(date)
+  weekday = date.strftime("%A")
+  
+  get_lunch_start_time = frappe.db.sql("""SELECT `tabEmployee Schedule Time Slot`.to_time as lunch_start_time FROM `tabEmployee Schedule` LEFT JOIN `tabEmployee Schedule Time Slot` ON `tabEmployee Schedule`.name = `tabEmployee Schedule Time Slot`.parent WHERE `tabEmployee Schedule`.name = %s AND `tabEmployee Schedule Time Slot`.day = %s AND `tabEmployee Schedule Time Slot`.is_lunch_time = 1""" ,(cstr(barber_beautician_schedule_name),cstr(weekday)),as_dict = 1)
+
+  if get_lunch_start_time and len(get_lunch_start_time) > 0:
+    return cstr(get_lunch_start_time[0]['lunch_start_time']) or "00:00:00"
+  else:
+    return "00:00:00"
 
 @frappe.whitelist()
 def employee_name_by_service(service):

@@ -356,6 +356,25 @@ def get_day_end_time(date, barber_beautician):
 	if get_end_time and len(get_end_time) > 0:
 		return cstr(get_end_time[0]['day_end_time'])
 
+# Get end time of the day for barber.
+@frappe.whitelist()
+def get_lunch_start_time(date, barber_beautician):
+	"""
+	Get lunch start time of 'Barber / Beautician' on 'date'
+	:param date: Date to check in schedule
+	:param barber_beautician: Name of the Barber / Beautician
+	:return: lunch start time of the given date
+	"""
+	barber_beautician_schedule_name = frappe.db.get_value("Employee", barber_beautician, "daily_schedule_list")
+	date = getdate(date)
+	weekday = date.strftime("%A")
+	
+	get_lunch_start_time = frappe.db.sql("""SELECT `tabEmployee Schedule Time Slot`.to_time as lunch_start_time FROM `tabEmployee Schedule` LEFT JOIN `tabEmployee Schedule Time Slot` ON `tabEmployee Schedule`.name = `tabEmployee Schedule Time Slot`.parent WHERE `tabEmployee Schedule`.name = %s AND `tabEmployee Schedule Time Slot`.day = %s AND `tabEmployee Schedule Time Slot`.is_lunch_time = 1""" ,(cstr(barber_beautician_schedule_name),cstr(weekday)),as_dict = 1)
+
+	if get_lunch_start_time and len(get_lunch_start_time) > 0:
+
+		return cstr(get_lunch_start_time[0]['lunch_start_time'])
+
 @frappe.whitelist()
 def send_email(doc):
 	customer_email = frappe.db.get_value("Customer",doc.customer,"email_id")
