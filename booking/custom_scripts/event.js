@@ -36,7 +36,10 @@ frappe.ui.form.on('Event', {
 				// console.log(r);
 				var data = r.message;
 				if(data.available_slots.length > 0) {
-					show_availability(data);
+					 setTimeout(function(){ 
+					 	show_availability(data);
+				    }, 1500); 
+					
 				} else {
 					show_empty_state();
 				}
