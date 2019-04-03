@@ -383,37 +383,55 @@ def send_email(doc):
 	if doc.workflow_state == "Opened":
 		
 		if customer_email:
+			msg = 'Dear {0},<br/> This is a confirmation that you have temporarily booked {1} on {2} with {3} at {4}.<br/>We will shortly contact you by email to confirm your chosen appointment.<br/>Thank you for choosing Antonios Barber Shop.<br/><b>{5}</b><br/><b>{6}</b><br/><b>{7}</b>'.format(str(doc.customer), str(doc.service), str(doc.appointment_date), str(doc.barber_beautician_name), str(doc.location), str(doc.company), str(frappe.db.get_value("Company",str(doc.company), "phone_no")), str(frappe.db.get_value("Company",str(doc.company), "website")))
+		
 			frappe.sendmail(recipients=customer_email,
 			subject="Antonio Barber Pending appointment",
-			message="Dear {}, Your appointment with Antonio Barber is under review.You will notify after it will accept".format(doc.customer))
+			message=str(''.join([i if ord(i) < 128 else ' ' for i in msg])),
+			now=True)
 
 		if employee_email:	
+			msg = 'Hello,<br/>You have new booking.<br/><b>Service: </b>{0}<br/><b>Date: </b>{1}<br/><b>Time: </b>{2}<br/><b>Client name: </b>{3}<br/><b>Client phone: </b>{4}<br/><b>Client email: </b>{5}'.format(str(doc.service),str(doc.appointment_date), str(doc.appointment_time), str(doc.customer), str(doc.customer_contact),str(doc.customer_email))
+
 			frappe.sendmail(recipients=employee_email,
 			subject="Antonio Barber Pending appointment",
-			message="Hello,new appointment-{} has been created and its in pending state.Please review it".format(doc.name))
+			message=str(''.join([i if ord(i) < 128 else ' ' for i in msg])),
+			now=True)
 
 	if doc.workflow_state == "Approved":
 
 		if customer_email:
+			msg = 'Dear {0},<br/>This is a confirmation that your appointment for  {1} has been approved.<br/>We will be looking forward to see you at {2} on {3} at {4}.<br/>Should you wish to cancel your appointment , please call at the shop or cancel it by login on our website.<br/><b>{5}</b><br/><b>{6}</b><br/><b>{7}</b><br/>'.format(str(doc.customer), str(doc.service), str(doc.location), str(doc.appointment_date), str(doc.appointment_time), str(doc.company), str(frappe.db.get_value("Company",str(doc.company), "phone_no")), str(frappe.db.get_value("Company",str(doc.company), "website")))
+
 			frappe.sendmail(recipients=customer_email,
 			subject="Antonio Barber appointment approved",
-			message="Dear {}, Your appointment with Antonio Barber is approved.".format(doc.customer))
+			message=str(''.join([i if ord(i) < 128 else ' ' for i in msg])),
+			now=True)
 
 		if employee_email:	
+			msg = 'Hello,<br/>A Booking has been Confirmed.<br/><b>Service: </b>{0}<br/><b>Date: </b>{1}<br/><b>Time: </b>{2}<br/><b>Client name: </b>{3}<br/><b>Client phone: </b>{4}<br/><b>Client email: </b>{5}'.format(str(doc.service),str(doc.appointment_date), str(doc.appointment_time), str(doc.customer), str(doc.customer_contact), str(doc.customer_email))
+
 			frappe.sendmail(recipients=employee_email,
 			subject="Antonio Barber appointment approved",
-			message="Hello,new appointment-{} has been approved.".format(doc.name))
+			message=str(''.join([i if ord(i) < 128 else ' ' for i in msg])),
+			now=True)
 
 	if doc.workflow_state == "Cancelled":
 		if customer_email:
+			msg='Dear {0},<br/>You have cancelled your appointment of {1} on {2} at {3}.<br/>Hope to be of service to you in the near future.<br/><b>{4}</b><br/><b>{5}</b><br/><b>{}</b><br/>'.format(str(doc.customer), str(doc.service), str(doc.appointment_date), str(doc.appointment_time), str(doc.company), str(frappe.db.get_value("Company",str(doc.company), "phone_no")), str(frappe.db.get_value("Company",str(doc.company), "website")))
+
 			frappe.sendmail(recipients=customer_email,
 			subject="Antonio Barber appointment Cancelled",
-			message="Dear {}, Your appointment with Antonio Barber is cancelled.Sorry for inconvinience".format(doc.customer))
+			message=str(''.join([i if ord(i) < 128 else ' ' for i in msg])),
+			now=True)
 
 		if employee_email:
+			msg = 'Hello,<br/>The following booking has been cancelled.<br/><b>Service: </b>{0}<br/><b>Date: </b>{1}<br/><b>Time: </b>{2}<br/><b>Client name: </b>{3}<br/><b>Client phone: </b>{4}<br/><b>Client email: </b>{5}'.format(str(doc.service),str(doc.appointment_date), str(doc.appointment_time), str(doc.customer), str(doc.customer_contact), str(doc.customer_email))
+
 			frappe.sendmail(recipients=employee_email,
 			subject="Antonio Barber appointment Cancelled",
-			message="Hello,new appointment-{} has been cancelled.".format(doc.name))
+			message=str(''.join([i if ord(i) < 128 else ' ' for i in msg]))	,
+			now=True)
 
 # ---------------------------------------------------------------------------
 # E mail tomorrows agenda to the employee
