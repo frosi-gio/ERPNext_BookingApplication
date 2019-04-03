@@ -418,7 +418,7 @@ def send_email(doc):
 
 	if doc.workflow_state == "Cancelled":
 		if customer_email:
-			msg='Dear {0},<br/>You have cancelled your appointment of {1} on {2} at {3}.<br/>Hope to be of service to you in the near future.<br/><b>{4}</b><br/><b>{5}</b><br/><b>{}</b><br/>'.format(str(doc.customer), str(doc.service), str(doc.appointment_date), str(doc.appointment_time), str(doc.company), str(frappe.db.get_value("Company",str(doc.company), "phone_no")), str(frappe.db.get_value("Company",str(doc.company), "website")))
+			msg='Dear {0},<br/>You have cancelled your appointment of {1} on {2} at {3}.<br/>Hope to be of service to you in the near future.<br/><b>{4}</b><br/><b>{5}</b><br/><b>{6}</b><br/>'.format(str(doc.customer), str(doc.service), str(doc.appointment_date), str(doc.appointment_time), str(doc.company), str(frappe.db.get_value("Company",str(doc.company), "phone_no")), str(frappe.db.get_value("Company",str(doc.company), "website")))
 
 			frappe.sendmail(recipients=customer_email,
 			subject="Antonio Barber appointment Cancelled",
