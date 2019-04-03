@@ -34,7 +34,7 @@ calendar_id = frappe.db.get_value("Booking Settings", None, "calendar_id")
 def validate(doc, method):
 	if not doc.customer_email or not doc.customer_contact:
 		primary_contact_url = str(frappe.utils.get_url()) + "/desk#List/Customer/" + str(doc.customer)
-		frappe.throw("Customer Email and Mobile No both are required. Please also add it into customer PRIMARY CONTACT DETAIL if not added : <a href=" + "'" + str(primary_contact_url) + "'" +">"+ str(primary_contact_url) +"</a>")
+		frappe.throw("Customer Email and Mobile No both are required. Please also add it into customer PRIMARY CONTACT DETAIL if not added : <a target = '_blank' href=" + "'" + str(primary_contact_url) + "'" +">"+ str(primary_contact_url) +"</a>")
 	# frappe.msgprint(cstr(frappe.utils.get_url()))
 
 	send_event_summary_mail()

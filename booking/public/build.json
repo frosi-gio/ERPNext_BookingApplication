@@ -1,0 +1,5 @@
+{
+    "js/booking.min.js": [
+        "public/js/customer_quick_entry.js"
+    ]
+}

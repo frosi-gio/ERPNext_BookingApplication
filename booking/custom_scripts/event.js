@@ -12,7 +12,7 @@ frappe.ui.form.on('Event', {
 				make_invoice(frm,dt,dn)
 			  });
 		}
-		if(frm.doc.workflow_state == 'Opened' && frappe.user.has_role(['System Manager']) && !frm.is_new()) {
+		if((frm.doc.workflow_state == 'Opened' || frm.doc.workflow_state == 'Approved') && frappe.user.has_role(['System Manager']) && !frm.is_new() && !frm.doc.sales_invoice) {
 			cur_frm.add_custom_button(__('Cancel'), cur_frm.cscript['Cancel Request']).addClass("btn-danger");;
 		}
 	},
@@ -38,7 +38,7 @@ frappe.ui.form.on('Event', {
 				if(data.available_slots.length > 0) {
 					 setTimeout(function(){ 
 					 	show_availability(data);
-				    }, 1500); 
+				    }, 1250); 
 					
 				} else {
 					show_empty_state();
@@ -87,7 +87,6 @@ frappe.ui.form.on('Event', {
 			}
 		});
 
-		console.log(last_eligible_time_of_first_half)
 
 
 		// Show if barber is not available.
@@ -407,6 +406,12 @@ cur_frm.fields_dict.barber__beautician.get_query = function(doc, cdt, cdn) {
 	return{
 		query: "booking.booking.employee.get_employee_name_by_service",
 		filters: {'service': doc.service}
+	}
+}
+
+cur_frm.fields_dict['customer'].get_query = function(doc, cdt, cdn) {
+	return{
+		query: "erpnext.controllers.queries.customer_query"
 	}
 }
 
