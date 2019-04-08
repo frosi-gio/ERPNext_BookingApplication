@@ -23,7 +23,9 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
         barber_availability_dict[str(barber)] = get_availability(booking_date, barber, service, from_time, to_time, days)
     return barber_availability_dict
   else:
-    return get_availability(booking_date, barber_beautician, service, from_time, to_time, days)
+    barber_availability_dict = {}
+    barber_availability_dict[str(barber_beautician)] = get_availability(booking_date, barber_beautician, service, from_time, to_time, days)
+    return barber_availability_dict
 
 @frappe.whitelist(allow_guest = True)
 def get_availability(booking_date, barber_beautician, service, from_time, to_time, days):
