@@ -126,6 +126,10 @@ doc_events = {
 		"validate" : "booking.booking.territory.validate",
 		"on_trash" : "booking.booking.territory.on_trash"
 	},
+	"Customer":{
+		# "validate" :"booking.booking.customer.validate",
+		"after_insert":"booking.booking.customer.after_insert"
+	}
 }
 
 

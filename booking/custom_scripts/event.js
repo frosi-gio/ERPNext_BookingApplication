@@ -3,7 +3,7 @@ frappe.ui.form.on('Event', {
 		if(frm.is_new()) {
 			frm.set_value("appointment_time", null);
 			frm.set_value("location", null);
-			frm.disable_save();
+			// frm.disable_save();
 		}
 	},
 	refresh:function(frm,dt,dn){
@@ -405,7 +405,10 @@ cur_frm.fields_dict.service.get_query = function(doc) {
 cur_frm.fields_dict.barber__beautician.get_query = function(doc, cdt, cdn) {
 	return{
 		query: "booking.booking.employee.get_employee_name_by_service",
-		filters: {'service': doc.service}
+		filters: {
+			'service': doc.service,
+			'branch': doc.location
+		}
 	}
 }
 

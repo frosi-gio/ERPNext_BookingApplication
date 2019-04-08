@@ -268,6 +268,9 @@ def get_employee_name_by_service(doctype, txt, searchfield, start, page_len, fil
 	if filters.get('service'):
 		cond = 'and `tabServices`.service = "' + filters['service'] + '"'
 
+	if filters.get('branch'):
+		cond+= 'and `tabEmployee`.branch = "' + filters['branch'] + '"'
+
 	return frappe.db.sql("""SELECT DISTINCT `tabEmployee`.name, `tabEmployee`.employee_name FROM `tabEmployee` LEFT JOIN `tabServices` ON `tabServices`.parent = `tabEmployee`.name
 		WHERE `tabEmployee`.status = 'Active' AND `tabServices`.is_provided = 'Yes'
 			 {cond} 

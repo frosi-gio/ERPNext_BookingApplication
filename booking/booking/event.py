@@ -22,7 +22,7 @@ from frappe.model.mapper import get_mapped_doc
 import re
 import dns.resolver
 
-
+	
 # Google calendar setup global variables.
 redirect_uri = cstr(frappe.utils.get_url())+"?cmd=booking.booking.event.google_callback"
 SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events'
@@ -32,9 +32,9 @@ refresh_token = frappe.db.get_value("Booking Settings", None, "refresh_token")
 calendar_id = frappe.db.get_value("Booking Settings", None, "calendar_id")
 
 def validate(doc, method):
-	if not doc.customer_email or not doc.customer_contact:
-		primary_contact_url = str(frappe.utils.get_url()) + "/desk#List/Customer/" + str(doc.customer)
-		frappe.throw("Customer Email and Mobile No both are required. Please also add it into customer PRIMARY CONTACT DETAIL if not added : <a target = '_blank' href=" + "'" + str(primary_contact_url) + "'" +">"+ str(primary_contact_url) +"</a>")
+	# if not doc.customer_contact:
+	# 	primary_contact_url = str(frappe.utils.get_url()) + "/desk#List/Customer/" + str(doc.customer)
+	# 	frappe.throw("Customer Email and Mobile No both are required. Please also add it into customer PRIMARY CONTACT DETAIL if not added : <a target = '_blank' href=" + "'" + str(primary_contact_url) + "'" +">"+ str(primary_contact_url) +"</a>")
 	# frappe.msgprint(cstr(frappe.utils.get_url()))
 
 	send_event_summary_mail()
@@ -317,7 +317,8 @@ def get_availability_data(date, barber_beautician, service):
 	if barber_beautician_schedule:
 		for t in barber_beautician_schedule.time_slots:
 			if weekday == t.day:
-				available_slots.append(t)
+				dict_to_append = {"day":str(t.day),"from_time":str(t.from_time), "to_time":str(t.to_time), "from_time_to_decimal":TimeToDecimal(str(t.from_time))}
+				available_slots.append(dict_to_append)
 
 	if not service_durations:
 		frappe.throw(_('"Service Duration" hasn"t been set for <b>{0}</b>. Add it in Item master.').format(service))
@@ -327,6 +328,8 @@ def get_availability_data(date, barber_beautician, service):
 		# TODO: return available slots in nearby dates
 		frappe.throw(_("Barber / Beautician not available on {0}").format(weekday))
 
+	sorted_available_slots = sorted(available_slots, key= lambda k: flt(k['from_time_to_decimal']))
+
 	# get appointments on that day for employee
 	appointments = frappe.get_all(
 		"Event",
@@ -334,10 +337,22 @@ def get_availability_data(date, barber_beautician, service):
 		fields=["name", "appointment_time", "duration", "workflow_state"])
 
 	return {
-		"available_slots": available_slots,
+		"available_slots": sorted_available_slots,
 		"appointments": appointments,
 		"duration_of_service": service_durations
 	}
+
+@frappe.whitelist()
+def TimeToDecimal(time):
+	(h, m, s) = str(time).split(':')
+
+	if '.' in str(s):
+		s = str(s).split('.')
+		result = int(h) * 60 + int(m) + int(s[0])/60
+	else:
+		result = int(h) * 60 + int(m) + int(s)/60
+
+	return str(flt(result)/60)
 
 # Get end time of the day for barber.
 @frappe.whitelist()
@@ -377,8 +392,8 @@ def get_lunch_start_time(date, barber_beautician):
 
 @frappe.whitelist()
 def send_email(doc):
-	customer_email = frappe.db.get_value("Customer",doc.customer,"email_id")
-	employee_email = frappe.db.get_value("Employee",doc.barber__beautician,"personal_email")
+	customer_email = doc.customer_email
+	employee_email = doc.employee_email
 	
 	if doc.workflow_state == "Opened":
 		

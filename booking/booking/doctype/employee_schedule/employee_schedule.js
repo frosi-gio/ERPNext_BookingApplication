@@ -21,7 +21,7 @@ frappe.ui.form.on('Employee Schedule', {
 					{fieldname: 'to_time', label:__('To'), fieldtype:'Time',
 						'default': '12:00:00', reqd: 1},
 					{fieldname: 'duration', label:__('Appointment Duration (mins)'),
-						fieldtype:'Int', 'default': 15, reqd: 1},
+						fieldtype:'Int', 'default': 15, reqd: 1, 'read_only': 1},
 				],
 				primary_action_label: __('Add Timeslots'),
 				primary_action: () => {

@@ -16,6 +16,17 @@ def TimeToDecimal(time):
 
 @frappe.whitelist(allow_guest = True)
 def get_availability_data(booking_date, barber_beautician, service, from_time, to_time, days):
+  if type(barber_beautician) is dict:
+    barber_availability_dict = {}
+    if len(barber_beautician):
+      for barber in barber_beautician:
+        barber_availability_dict[str(barber)] = get_availability(booking_date, barber, service, from_time, to_time, days)
+    return barber_availability_dict
+  else:
+    return get_availability(booking_date, barber_beautician, service, from_time, to_time, days)
+
+@frappe.whitelist(allow_guest = True)
+def get_availability(booking_date, barber_beautician, service, from_time, to_time, days):
   """
   Get availability data of 'Barber / Beautician' on 'date'
   :param date: Date to check in schedule
@@ -98,16 +109,16 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
             current_time_in_decimal = TimeToDecimal(nowtime())
 
             if flt(slot_time_in_decimal) >= flt(current_time_in_decimal): 
-              slots = {"from_time":t.from_time, "is_available":1}
+              slots = {"from_time":t.from_time, "is_available":1, "from_time_to_decimal":TimeToDecimal(str(t.from_time))}
               if flt(slot_time_in_decimal) >= flt(from_time_to_decimal) and flt(slot_time_in_decimal)<= flt(to_time_to_decimal):
                 available_slots.append(slots)
             else:
-              slots = {"from_time":t.from_time, "is_available":0}
+              slots = {"from_time":t.from_time, "is_available":0, "from_time_to_decimal":TimeToDecimal(str(t.from_time))}
               if flt(slot_time_in_decimal) >= flt(from_time_to_decimal) and flt(slot_time_in_decimal)<= flt(to_time_to_decimal):
                 available_slots.append(slots)
 
           else:
-            slots = {"from_time":t.from_time, "is_available":1}
+            slots = {"from_time":t.from_time, "is_available":1, "from_time_to_decimal":TimeToDecimal(str(t.from_time))}
             if flt(slot_time_in_decimal) >= flt(from_time_to_decimal) and flt(slot_time_in_decimal)<= flt(to_time_to_decimal):
               available_slots.append(slots)
 
@@ -163,10 +174,11 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
           if flt(start_time) > flt(last_eligible_time_of_first_half) and flt(start_time) <= flt(day_lunch_start_time_decimal):
             slot['is_available'] = 0
     # Code to disable the time slot which don't have enough time to complete the appointment END.     
+    sorted_available_slots = sorted(available_slots, key= lambda k: flt(k['from_time_to_decimal']))
 
     result_dict[str(date)] = {
       "day":weekday,
-      "available_slots": available_slots,
+      "available_slots": sorted_available_slots,
       # "appointments": appointments,
       "duration_of_service": service_durations,
       "is_holiday": is_holiday,
@@ -222,10 +234,13 @@ def get_lunch_start_time(date, barber_beautician):
     return "00:00:00"
 
 @frappe.whitelist()
-def employee_name_by_service(service):
+def employee_name_by_service_location(service, location):
   cond = ''
   if service:
     cond = 'and `tabServices`.service = "' + str(service) + '"'
+
+  if location:
+    cond += 'and `tabEmployee`.branch = "' + str(location) + '"'
 
   return frappe.db.sql("""SELECT DISTINCT `tabEmployee`.name, `tabEmployee`.employee_name, `tabServices`.billing_rate FROM `tabEmployee` LEFT JOIN `tabServices` ON `tabServices`.parent = `tabEmployee`.name
     WHERE `tabEmployee`.status = 'Active' AND `tabServices`.is_provided = 'Yes' AND `tabEmployee`.is_service_provider = 1

@@ -4,12 +4,11 @@
 
 frappe.query_reports["Next Day Summary"] = {
 	"filters": [
-		// {
-		// 	"fieldname":"summary_date",
-		// 	"label": __("Summary Date"),
-		// 	"fieldtype": "Date",
-		// 	"default": frappe.datetime.get_today(),
-		// 	"width": "60px"
-		// },
-	]
+	],
+	/*onload: function(report) {
+		report.page.add_inner_button(__("Add New Appointment"), function() {
+			//frappe.set_route("List","Event")
+			frappe.new_doc("Event");
+		});
+	}*/
 }
