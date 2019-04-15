@@ -68,9 +68,13 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
     ordered_data = sorted(merged_dict.items(), key = lambda x:datetime.strptime(x[0], '%Y-%m-%d'), reverse=False)
     return ordered_data
   else:
-    barber_availability_dict = {}
-    barber_availability_dict[str(barber_beautician)] = get_availability(booking_date, barber_beautician, service, from_time, to_time, days)
-    return barber_availability_dict
+  	availability = get_availability(booking_date, barber_beautician, service, from_time, to_time, days)
+  	emp_name = frappe.db.get_value("Employee", cstr(barber_beautician), "employee_name")
+  	for date in availability:
+  	  for slot in date[1]["available_slots"]:
+  	    slot["barber"] = cstr(barber_beautician)
+  	    slot["name"] = emp_name
+  	return availability
 
 @frappe.whitelist(allow_guest = True)
 def get_availability(booking_date, barber_beautician, service, from_time, to_time, days):
