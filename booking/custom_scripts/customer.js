@@ -10,7 +10,7 @@ frappe.ui.form.on('Customer', {
 	
 
 	}
-	// ,
+	// 	,
 	// validate: function(frm){
 
 	// 	make_user_on_website(doc,dt,dn)
@@ -51,6 +51,18 @@ function get_customer_api(){
 	})
 }
 
+cur_frm.cscript.customer_mobile_number_ = function(doc,dt,dn){
+
+if (doc.customer_mobile_number_){
+	cur_frm.set_value("mobile_no", doc.customer_mobile_number_)
+}
+}
+cur_frm.cscript.customer_email_id = function(doc,dt,dn){
+
+if (doc.customer_email_id){
+	cur_frm.set_value("email_id", doc.customer_email_id)
+}
+}
 // function make_user_on_website(doc,dt,dn){
 // 	var name = doc.name
 // 	var customer = doc.customer_name

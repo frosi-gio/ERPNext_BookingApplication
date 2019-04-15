@@ -12,6 +12,11 @@ import json
 
 Customer_API_URL_LIVE=cstr(frappe.db.get_value("Booking Settings",None,"customer_api"))
 
+def validate(self,method):
+    self.mobile_no = self.customer_mobile_number_
+    self.email_id = self.customer_email_id
+
+
 def after_insert(self,method):
     
     create_customer_wordpress(self)
@@ -35,9 +40,9 @@ def after_insert(self,method):
 # def get_wordpress_url():
 #     return cstr(frappe.get_value("Booking Settings",None,"customer_api"))
 
-@frappe.whitelist()
+
 def create_customer_wordpress(self):
-    
+    # frappe.msgprint(self.mobile_no)
     if Customer_API_URL_LIVE:
         random_string = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(8)])
         # frappe.msgprint(random_string)
@@ -56,7 +61,8 @@ def create_customer_wordpress(self):
         response_data = requests.post(Customer_API_URL_LIVE,headers=headers_content,data=json.dumps(data_object))
         # frappe.msgprint(cstr(response_data.json()))
         if cstr(response_data.json()['status']) == "404":
-            frappe.msgprint("Customer <b>{}</b> is already created in website".format(cstr(self.name)))
+            # frappe.msgprint("Customer <b>{}</b> is already created in website".format(cstr(self.name)))
+            frappe.msgprint(cstr(response_data.json()['message']))
             
         elif cstr(response_data.json()['status']) == "200":
             frappe.msgprint("Customer <b>{}</b> has been successfully created in website".format(cstr(self.name)))

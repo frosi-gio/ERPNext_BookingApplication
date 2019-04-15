@@ -37,7 +37,7 @@ def validate(doc, method):
 	# 	frappe.throw("Customer Email and Mobile No both are required. Please also add it into customer PRIMARY CONTACT DETAIL if not added : <a target = '_blank' href=" + "'" + str(primary_contact_url) + "'" +">"+ str(primary_contact_url) +"</a>")
 	# frappe.msgprint(cstr(frappe.utils.get_url()))
 
-	send_event_summary_mail()
+	# send_event_summary_mail()
 	
 	send_email(doc)
 	#set start date
@@ -46,6 +46,8 @@ def validate(doc, method):
 	#set end date
 	end_date = get_datetime(get_datetime(doc.starts_on) + timedelta(minutes=flt(doc.duration)))
 	doc.ends_on = end_date
+
+	# frappe.throw(str(frappe.db.get_value("Event",{"starts_on":start_date,"barber__beautician":doc.barber__beautician},"name")))
 	
 	#set price list by employee pos profile
 	pos_selling_price_list = frappe.db.get_value("POS Profile", {"employee":doc.barber__beautician}, "selling_price_list")

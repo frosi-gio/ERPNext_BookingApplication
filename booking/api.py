@@ -18,10 +18,55 @@ def TimeToDecimal(time):
 def get_availability_data(booking_date, barber_beautician, service, from_time, to_time, days):
   if type(barber_beautician) is dict:
     barber_availability_dict = {}
+    merged_dict = {}
     if len(barber_beautician):
       for barber in barber_beautician:
         barber_availability_dict[str(barber)] = get_availability(booking_date, barber, service, from_time, to_time, days)
-    return barber_availability_dict
+      # return barber_availability_dict
+      
+      for emp, date_list in barber_availability_dict.items():
+      	emp_name = frappe.db.get_value("Employee", cstr(emp), "employee_name")
+      	for date, availability in date_list:
+	      if date not in merged_dict:
+	        merged_dict[date] ={}
+	        if availability["is_holiday"] == "No" and availability["is_on_leave"] == "No" and availability["is_barber_available"]== "Yes" and availability["has_barber_schedule"] == "Yes":
+	          merged_dict[date]["is_barber_available"] = "Yes"
+	          merged_dict[date]["day"] = availability["day"]
+	          merged_dict[date]["available_slots"] = availability["available_slots"]
+	          for ms in merged_dict[date]["available_slots"]:
+	          	ms["barber"] = cstr(emp)
+	          	ms["name"] = emp_name
+	        else:
+	          merged_dict[date]["is_barber_available"] = "No"
+	          merged_dict[date]["day"] = availability["day"]
+	          merged_dict[date]["available_slots"] = []
+	      elif date in merged_dict:
+	        if availability["is_holiday"] == "No" and availability["is_on_leave"] == "No" and availability["is_barber_available"]== "Yes" and availability["has_barber_schedule"] == "Yes":
+	          merged_dict[date]["is_barber_available"] = "Yes"
+
+	        for slot in availability["available_slots"]:
+	          matched = 0
+	          exist_slot_available = 0
+	          loop_count = 0
+	          index_no = 0
+	          for s in merged_dict[date]["available_slots"]:    
+	          	loop_count+=1
+	          	if s["from_time_to_decimal"] == slot["from_time_to_decimal"]:
+	          	  exist_slot_available = flt(s["is_available"])
+	          	  matched = 1
+	          	  index_no=loop_count
+	          if not matched:
+	          	slot["barber"] = cstr(emp)
+	          	slot["name"] = emp_name
+	          	merged_dict[date]["available_slots"].append(slot)
+	          else:
+	          	if not exist_slot_available and slot["is_available"] == 1:
+	          	  merged_dict[date]["available_slots"][index_no-1]["is_available"] = 1
+	          	  merged_dict[date]["available_slots"][index_no-1]["barber"] = cstr(emp)
+	          	  merged_dict[date]["available_slots"][index_no-1]["name"] = cstr(emp_name)
+    from datetime import datetime
+    ordered_data = sorted(merged_dict.items(), key = lambda x:datetime.strptime(x[0], '%Y-%m-%d'), reverse=False)
+    return ordered_data
   else:
     barber_availability_dict = {}
     barber_availability_dict[str(barber_beautician)] = get_availability(booking_date, barber_beautician, service, from_time, to_time, days)
@@ -157,24 +202,23 @@ def get_availability(booking_date, barber_beautician, service, from_time, to_tim
     
       start_time = TimeToDecimal(slot['from_time'])
       end_time = flt(TimeToDecimal(slot['from_time'])) + flt(service_durations)/60
-      
+
       if slot['is_available'] == 1:
-      
-        for s in available_slots:
-        
-          slot_time = TimeToDecimal(s['from_time'])
-          
-          if start_time <= slot_time and end_time > slot_time:
-            if s['is_available'] == 0:
-              slot['is_available'] = 0
-        
-        if flt(day_end_time_decimal) > 0:   
+      	
+      	if flt(day_end_time_decimal) > 0:   
           if flt(end_time) > flt(day_end_time_decimal):
             slot['is_available'] = 0
 
         if flt(day_lunch_start_time_decimal) > 0:
           if flt(start_time) > flt(last_eligible_time_of_first_half) and flt(start_time) <= flt(day_lunch_start_time_decimal):
             slot['is_available'] = 0
+
+        for s in available_slots:
+          slot_time = s['from_time_to_decimal']
+          if (flt(start_time) <= flt(slot_time)) and (flt(end_time) > flt(slot_time)):
+            if s['is_available'] == 0:
+              slot['is_available'] = 0
+        
     # Code to disable the time slot which don't have enough time to complete the appointment END.     
     sorted_available_slots = sorted(available_slots, key= lambda k: flt(k['from_time_to_decimal']))
 
@@ -252,7 +296,7 @@ def employee_name_by_service_location(service, location):
       cond=cond))
 
 @frappe.whitelist()
-def system_currency():
+def system_currency(allow_guest = True):
 
   system_currency = {}
 
@@ -262,3 +306,29 @@ def system_currency():
   system_currency["symbol"] = frappe.db.get_value("Currency", default_currency, "symbol")
 
   return system_currency
+
+@frappe.whitelist(allow_guest = True)
+def get_catagory():
+  service_dict = {}
+  services = frappe.db.sql("""select t1.name , t2.branch from `tabItem Group`as t1 inner join `tabService related branch` as t2 on t1.name = t2.parent""",as_dict = 1)
+  for s in services:
+    if s.name not in service_dict:
+      service_dict[s.name] = [s.branch]
+    elif s.name in service_dict:
+      service_dict[s.name].append(s.branch)
+
+  return service_dict
+
+
+@frappe.whitelist(allow_guest = True)
+def get_unique_booking(time,date,barber):
+  
+  date = getdate(date)
+  
+  event_data = frappe.get_all("Event",filters=[["workflow_state", "in", ('Approved','Opened')],["appointment_date","=",date],["barber__beautician","=",barber],["appointment_time","=",time]],fields=['name'])
+
+  if event_data:
+    return "Event exist"
+  else:
+    return "No Event exist"
+

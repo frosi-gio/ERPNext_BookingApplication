@@ -124,6 +124,11 @@ def get_data():
 					"type": "report",
 					"name": "Sales Person-wise Transaction Summary",
 					"is_query_report": True
+				},
+				{
+					"type": "report",
+					"name": "Appointments Summary",
+					"is_query_report": True
 				}
 			]
 		}
