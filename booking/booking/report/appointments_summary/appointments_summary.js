@@ -5,6 +5,21 @@
 frappe.query_reports["Appointments Summary"] = {
 	"filters": [
 
+	{
+			"fieldname":"barber",
+			"label": __("Barber"),
+			"fieldtype": "Link",
+			"options": "Employee"
+			
+	},
+	{
+			"fieldname":"appointment_date",
+			"label": __("Appointment Date"),
+			"fieldtype": "Date",
+			"default": frappe.datetime.get_today(),
+			"width": "80"
+		}
+
 	],
 	onload: function(report) {
 		report.page.add_inner_button(__("Add New Appointment"), function() {

@@ -4,10 +4,11 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import flt, cint, cstr, add_days, getdate, get_datetime, get_time,today
+from frappe.utils import flt, cint, cstr, add_days, getdate, get_datetime, get_time,today ,get_url
 
 
 def execute(filters=None):
+
 	columns, data = [], []
 	time_dict = {}
 	
@@ -19,6 +20,7 @@ def execute(filters=None):
 	time_row=[]
 	event_time = frappe.get_all("Employee Schedule Time Slot",fields=['from_time'])
 	time_data = []
+	
 	
 
 # -------------------------------get array of all sorted time--------------------------------
@@ -37,8 +39,8 @@ def execute(filters=None):
 	
 	data.append(time_row)
 
-# -------------------------------get all barber-----------------------------------------------
-	for b in get_barber():
+# -------------------------------get all barber----------------------------------------------------------------
+	for b in get_barber(filters):
 		row1 = []
 		for t in range(0,len(time_row)):
 			if t == 0:
@@ -48,7 +50,7 @@ def execute(filters=None):
 
 	
 
-# ----------------------------------make time slot dict with index-------------------------------	
+# ----------------------------------make time slot dict with index----------------------------------------------------	
 	c = 1
 	for t in time_data:
 		time_dict[TimeToDecimal(t)]=c
@@ -57,7 +59,7 @@ def execute(filters=None):
 
 # ----------------------------------------ploting data in report------------------------------------------------------
 	
-	event_data = frappe.get_all("Event",filters=[["workflow_state", "in", ('Approved','Opened')],["appointment_date","=",today()]],fields=['barber_beautician_name','appointment_time','duration','name'],order_by="appointment_time")
+	event_data = frappe.get_all("Event",filters=[["workflow_state", "in", ('Approved','Opened')],["appointment_date","=",filters.get("appointment_date")]],fields=['barber_beautician_name','appointment_time','duration','name','subject','workflow_state'],order_by="appointment_time")
 	
 	for eve in event_data:
 		event_summary.append([eve.barber_beautician_name,cstr(eve.appointment_time),eve.name])
@@ -72,7 +74,11 @@ def execute(filters=None):
 			if (flt(start_time) <= flt(slot_time)) and (flt(end_time) > flt(slot_time)):				
 				for d in range(0,len(data)):
 					if cstr(data[d][0]) == cstr(aptmnt.barber_beautician_name):
-						data[d][time_dict[TimeToDecimal(slot)]] = cstr(aptmnt.name)
+						if aptmnt.workflow_state == "Approved":
+							data[d][time_dict[TimeToDecimal(slot)]] = "<a style='background-color: {0};' href={1}/desk#Form/Event/{2}>{3}</a>".format("#9deca2",frappe.utils.get_url(),aptmnt.name,aptmnt.subject)
+						elif aptmnt.workflow_state == "Opened":
+							data[d][time_dict[TimeToDecimal(slot)]] = "<a style='background-color: {0};' href={1}/desk#Form/Event/{2}>{3}</a>".format("#a3a3ff",frappe.utils.get_url(),aptmnt.name,aptmnt.subject)
+
 					
     
 	new_data = [[data[j][i] for j in range(len(data))] for i in range(len(data[0]))]
@@ -93,24 +99,23 @@ def get_columns(filters):
 			"width": 100
 		}
 	]
-	barb = get_barber()
+	barb = get_barber(filters)
 
 	for b in barb:
 		columns.append(
 			{
 			"label":_(cstr(b)),
 			"fieldname": cstr(b),
-			"fieldtype": "Link",
-			"options": "Event",
-			"width": 100	
+			"fieldtype": "Data",
+			"width": 160	
 			}
 		)
 
 	return columns
 
-def get_barber():
+def get_barber(filters):
 	barb=[]
-	barber_data = frappe.get_all("Employee",filters=[["is_service_provider","=",1]],fields=['employee_name'])
+	barber_data = frappe.get_all("Employee",filters=[["is_service_provider","=",1],["name","=",filters.get("barber")]],fields=['employee_name'])
 	for bd in barber_data:
 		barb.append(cstr(bd.employee_name))
 
