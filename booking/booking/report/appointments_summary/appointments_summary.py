@@ -5,10 +5,11 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.utils import flt, cint, cstr, add_days, getdate, get_datetime, get_time,today ,get_url
+import json
 
 
 def execute(filters=None):
-
+	# frappe.throw(json.loads(frappe.new_doc("Event")))
 	columns, data = [], []
 	time_dict = {}
 	
@@ -39,22 +40,29 @@ def execute(filters=None):
 	
 	data.append(time_row)
 
-# -------------------------------get all barber----------------------------------------------------------------
-	for b in get_barber(filters):
-		row1 = []
-		for t in range(0,len(time_row)):
-			if t == 0:
-				row1.append(b)
-			row1.append('')
-		data.append(row1)
-
-	
-
 # ----------------------------------make time slot dict with index----------------------------------------------------	
 	c = 1
 	for t in time_data:
 		time_dict[TimeToDecimal(t)]=c
 		c=c+1
+	# frappe.throw(str(time_dict))
+
+	time_str_dict = {}
+	c = 1
+	for t in time_data:
+		time_str_dict[c]=str(t)
+		c=c+1
+	# frappe.msgprint(str(time_str_dict))
+
+# -------------------------------get all barber----------------------------------------------------------------
+	for k,v in get_barber(filters).items():
+		row1 = []
+		for t in range(0,len(time_row)):
+			if t == 0:
+				row1.append(v)
+			else:
+				row1.append("<a target='_blank' href = {0} class='barber' data-barber={1} data-row-index={2} data-row-time ={3}> + New </a>".format(str(frappe.utils.get_url()) + "/desk#Form/Event/New%20Event%201?barber=" + str(k.split("/")[1])+"&date="+str(filters.get("appointment_date"))+"&time="+str(time_str_dict[t]), str(k), str(t), str(time_str_dict[t])))
+		data.append(row1)
 	
 
 # ----------------------------------------ploting data in report------------------------------------------------------
@@ -72,7 +80,10 @@ def execute(filters=None):
 		for slot in time_data:
 			slot_time = TimeToDecimal(slot)
 			if (flt(start_time) <= flt(slot_time)) and (flt(end_time) > flt(slot_time)):				
+				#frappe.msgprint(cstr(data))
 				for d in range(0,len(data)):
+					#frappe.msgprint("hi")
+					#frappe.msgprint(cstr(data[d][0]))
 					if cstr(data[d][0]) == cstr(aptmnt.barber_beautician_name):
 						if aptmnt.workflow_state == "Approved":
 							data[d][time_dict[TimeToDecimal(slot)]] = "<a style='background-color: {0};' href={1}/desk#Form/Event/{2}>{3}</a>".format("#9deca2",frappe.utils.get_url(),aptmnt.name,aptmnt.subject)
@@ -82,6 +93,7 @@ def execute(filters=None):
 					
     
 	new_data = [[data[j][i] for j in range(len(data))] for i in range(len(data[0]))]
+	# frappe.throw(cstr(new_data))
 	
 	new_data = new_data[1:]
 	
@@ -101,11 +113,11 @@ def get_columns(filters):
 	]
 	barb = get_barber(filters)
 
-	for b in barb:
+	for k,v in barb.items():
 		columns.append(
 			{
-			"label":_(cstr(b)),
-			"fieldname": cstr(b),
+			"label":_(cstr(v)),
+			"fieldname": cstr(v),
 			"fieldtype": "Data",
 			"width": 160	
 			}
@@ -114,10 +126,10 @@ def get_columns(filters):
 	return columns
 
 def get_barber(filters):
-	barb=[]
-	barber_data = frappe.get_all("Employee",filters=[["is_service_provider","=",1],["name","=",filters.get("barber")]],fields=['employee_name'])
+	barb={}
+	barber_data = frappe.get_all("Employee",filters=[["is_service_provider","=",1],["name","=",filters.get("barber")]],fields=['employee_name','name'])
 	for bd in barber_data:
-		barb.append(cstr(bd.employee_name))
+		barb[bd.name] = cstr(bd.employee_name)
 
 	return barb
 

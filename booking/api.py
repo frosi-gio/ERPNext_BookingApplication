@@ -28,7 +28,7 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
       	emp_name = frappe.db.get_value("Employee", cstr(emp), "employee_name")
       	for date, availability in date_list:
 	      if date not in merged_dict:
-	        merged_dict[date] ={}
+	        merged_dict[date] ={"duration_of_service":availability["duration_of_service"]}
 	        if availability["is_holiday"] == "No" and availability["is_on_leave"] == "No" and availability["is_barber_available"]== "Yes" and availability["has_barber_schedule"] == "Yes":
 	          merged_dict[date]["is_barber_available"] = "Yes"
 	          merged_dict[date]["day"] = availability["day"]

@@ -4,6 +4,12 @@ frappe.ui.form.on('Event', {
 			frm.set_value("appointment_time", null);
 			frm.set_value("location", null);
 			// frm.disable_save();
+
+			var barber = 'EMP/'+getUrlVars()['barber'].toString()
+			frm.set_value("barber__beautician", barber);
+			frm.set_value("appointment_date", getUrlVars()['date']);
+			// frm.set_value("appointment_time", getUrlVars()['time']);
+			// console.log(getUrlVars())
 		}
 	},
 	refresh:function(frm,dt,dn){
@@ -300,6 +306,20 @@ frappe.ui.form.on('Event', {
 	}
 	
 });
+
+// Get query string from url
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
 
 // Format date 'day month_name year'
 function formatDate(date) {
