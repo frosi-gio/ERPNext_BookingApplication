@@ -17,9 +17,22 @@ def validate(self,method):
     self.email_id = self.customer_email_id
 
 
-def after_insert(self,method):
+def after_delete(self,method):
+    # frappe.throw(cstr(self.website_userid))
+    data_object = {
+    "user_id":[cstr(self.website_userid)]
+    }
+
+    headers_content = {
+    'Content-Type': 'application/json',
+    }
+    response_data = requests.post(cstr(frappe.db.get_value("Booking Settings",None,"website_url"))+"/wp-json/antonio/api/user/delete",headers=headers_content,data=json.dumps(data_object))
     
-    create_customer_wordpress(self)
+    
+
+def after_insert(self,method):
+    if self.website_customer != 1:
+        create_customer_wordpress(self)
     # frappe.throw("validate")
 
 
@@ -67,8 +80,12 @@ def create_customer_wordpress(self):
         elif cstr(response_data.json()['status']) == "200":
             frappe.msgprint("Customer <b>{}</b> has been successfully created in website".format(cstr(self.name)))
             
+            # frappe.msgprint(cstr(response_data.json()['user_id']))
+            
             self.website_userid = response_data.json()['user_id']
             self.customer_password = random_string
+            frappe.db.set_value("Customer",self.name,"website_userid",response_data.json()['user_id'])
+            frappe.db.set_value("Customer",self.name,"customer_password",random_string)
             frappe.sendmail(
             recipients=cstr(self.email_id),
             subject="Your Login Details",

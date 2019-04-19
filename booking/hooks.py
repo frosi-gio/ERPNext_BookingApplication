@@ -128,7 +128,8 @@ doc_events = {
 	},
 	"Customer":{
 		"validate" :"booking.booking.customer.validate",
-		"after_insert":"booking.booking.customer.after_insert"
+		"after_insert":"booking.booking.customer.after_insert",
+		"after_delete":"booking.booking.customer.after_delete"
 	}
 }
 
