@@ -21,6 +21,7 @@ import google.oauth2.credentials
 from frappe.model.mapper import get_mapped_doc
 import re
 import dns.resolver
+import json
 
 	
 # Google calendar setup global variables.
@@ -38,6 +39,7 @@ def validate(doc, method):
 	# frappe.msgprint(cstr(frappe.utils.get_url()))
 
 	# send_event_summary_mail()
+	doc.subject = cstr(doc.customer) + " [" + cstr(doc.service) + " by " + cstr(doc.barber_beautician_name) + "]"
 	
 	send_email(doc)
 	#set start date
@@ -136,13 +138,28 @@ def after_insert(doc, method):
 	# 		frappe.db.commit()
 
 @frappe.whitelist()			
-def cancel_request(name, cancel_reason):
-	style_dict = {"Opened":"#7575ff","Cancelled":"#ff4d4d","Approved":"#6be273"}
+def cancel_request(doc,appointment_date,name, cancel_reason):
+	#frappe.msgprint(cstr(doc))
+	doc = frappe.get_doc(json.loads(doc))
+	#frappe.msgprint(cstr(doc.workflow_state))
+	#doc.workflow_state = 'Cancelled'
+	#frappe.throw(cstr(doc))
+	#frappe.msgprint(doc.employee_email)
+	#frappe.msgprint(cstr(doc.workflow_state))
+	#frappe.throw(doc.customer_email)
 	
-	frappe.db.set_value("Event", name, "color", style_dict["Cancelled"])
-	frappe.db.set_value("Event", name, 'cancel_reason', cancel_reason)
-	frappe.db.set_value("Event", name, 'workflow_state', 'Cancelled')
-	frappe.db.commit()
+	from datetime import date
+	
+	if getdate(appointment_date) < date.today():
+		frappe.throw("You Cannot Cancel Past Date Appointment")
+	else:	
+		style_dict = {"Opened":"#7575ff","Cancelled":"#ff4d4d","Approved":"#6be273"}
+		
+		frappe.db.set_value("Event", name, "color", style_dict["Cancelled"])
+		frappe.db.set_value("Event", name, 'cancel_reason', cancel_reason)
+		frappe.db.set_value("Event", name, 'workflow_state', 'Cancelled')
+		frappe.db.commit()
+		send_email(doc,flag="2")
 
 def get_access_token():
 	if not refresh_token:
@@ -393,14 +410,19 @@ def get_lunch_start_time(date, barber_beautician):
 		return cstr(get_lunch_start_time[0]['lunch_start_time'])
 
 @frappe.whitelist()
-def send_email(doc):
+def send_email(doc,flag=1):
+	#frappe.msgprint(cstr(flag))
+	if cstr(flag) == "2":
+		doc.workflow_state = "Cancelled"
+		#frappe.throw(cstr(doc.workflow_state))
+
 	customer_email = doc.customer_email
 	employee_email = doc.employee_email
 	
 	if doc.workflow_state == "Opened":
 		
 		if customer_email:
-			msg = 'Dear {0},<br/> This is a confirmation that you have temporarily booked {1} on {2} with {3} at {4}.<br/>We will shortly contact you by email to confirm your chosen appointment.<br/>Thank you for choosing Antonios Barber Shop.<br/><b>{5}</b><br/><b>{6}</b><br/><b>{7}</b>'.format(str(doc.customer), str(doc.service), str(doc.appointment_date), str(doc.barber_beautician_name), str(doc.location), str(doc.company), str(frappe.db.get_value("Company",str(doc.company), "phone_no")), str(frappe.db.get_value("Company",str(doc.company), "website")))
+			msg = 'Dear {0},<br/> This is a confirmation that you have temporarily booked {1} on {2} with {3} at {4}.<br/>We will shortly contact you by email to confirm your chosen appointment.<br/>Thank you for choosing Antonios Barber Shop.<br/><b>{5}</b><br/><b>{6}</b><br/><b>{7}</b>'.format(cstr(doc.customer), cstr(doc.service), cstr(doc.appointment_date), cstr(doc.barber_beautician_name), cstr(doc.location), cstr(doc.company), cstr(frappe.db.get_value("Company",str(doc.company), "phone_no")), cstr(frappe.db.get_value("Company",str(doc.company), "website")))
 		
 			frappe.sendmail(recipients=customer_email,
 			subject="Antonio Barber Pending appointment",
@@ -521,15 +543,18 @@ def make_invoice(source_name, target_doc=None, ignore_permissions=False):
 
 def check_email(email):
     match_grp = re.match(r'(.*)@(.*)', email)
-    records = dns.resolver.query(match_grp.group(2), 'MX')
-    mxRecord = records[0].exchange
-    mxRecord = str(mxRecord)
-    print(mxRecord)
-    searchObj = re.search( r'google', mxRecord)
-    if searchObj != None:
-        return True
-    else:
-        return False
+    try:
+        records = dns.resolver.query(match_grp.group(2), 'MX')
+        mxRecord = records[0].exchange
+        mxRecord = str(mxRecord)
+        print(mxRecord)
+        searchObj = re.search( r'google', mxRecord)
+        if searchObj != None:
+            return True
+        else:
+            return False
+    except:
+        frappe.msgprint("<b>Calendar Event</b> cannot be set as <b>customer email</b> is not proper.")
 
 @frappe.whitelist()
 def get_wordpress_url():

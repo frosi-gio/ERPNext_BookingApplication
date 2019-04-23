@@ -119,7 +119,7 @@ def get_columns(filters):
 			"label":_(cstr(v)),
 			"fieldname": cstr(v),
 			"fieldtype": "Data",
-			"width": 160	
+			"width": 200	
 			}
 		)
 

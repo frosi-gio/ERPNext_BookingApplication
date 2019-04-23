@@ -363,32 +363,36 @@ cur_frm.cscript['Cancel Request'] = function(){
 		frappe.call({
 			method: "booking.booking.event.cancel_request",
 			//doc: cur_frm.doc,
-			args: {"name": cur_frm.doc.name, "cancel_reason":args.cancel_reason},
+			args: {"doc":cur_frm.doc,"appointment_date":cur_frm.doc.appointment_date,"name": cur_frm.doc.name, "cancel_reason":args.cancel_reason},
 			callback: function(r) {
 				if(r.exc) {
 					frappe.msgprint(__("There are some error. Form can't be rejected."));
 					return;
 				}
-				if (r && !r.exc){
-					frappe.call({
-						method: 'frappe.core.doctype.communication.email.make',
-						args: {
-							doctype: cur_frm.doctype,
-							name: cur_frm.docname,
-							subject: format(__('Reason for Cancel')),
-							content: args.cancel_reason,
-							send_mail: false,
-							send_me_a_copy: false,
-							communication_medium: 'Other',
-							sent_or_received: 'Sent'
-						},
-						callback: function(res){
-							cur_frm.reload_doc();
-						}
-					});
-				}
+
+				// Called from py file 
+
+				// if (r && !r.exc){
+				// 	frappe.call({
+				// 		method: 'frappe.core.doctype.communication.email.make',
+				// 		args: {
+				// 			doctype: cur_frm.doctype,
+				// 			name: cur_frm.docname,
+				// 			subject: format(__('Reason for Cancel')),
+				// 			content: args.cancel_reason,
+				// 			send_mail: false,
+				// 			send_me_a_copy: false,
+				// 			communication_medium: 'Other',
+				// 			sent_or_received: 'Sent'
+				// 		},
+				// 		callback: function(res){
+				// 			cur_frm.reload_doc();
+				// 		}
+				// 	});
+				// }
 				dialog.hide();
 				cur_frm.refresh();
+				cur_frm.reload_doc();
 			},
 			btn: this
 		})
