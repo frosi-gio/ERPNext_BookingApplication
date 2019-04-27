@@ -370,26 +370,24 @@ cur_frm.cscript['Cancel Request'] = function(){
 					return;
 				}
 
-				// Called from py file 
-
-				// if (r && !r.exc){
-				// 	frappe.call({
-				// 		method: 'frappe.core.doctype.communication.email.make',
-				// 		args: {
-				// 			doctype: cur_frm.doctype,
-				// 			name: cur_frm.docname,
-				// 			subject: format(__('Reason for Cancel')),
-				// 			content: args.cancel_reason,
-				// 			send_mail: false,
-				// 			send_me_a_copy: false,
-				// 			communication_medium: 'Other',
-				// 			sent_or_received: 'Sent'
-				// 		},
-				// 		callback: function(res){
-				// 			cur_frm.reload_doc();
-				// 		}
-				// 	});
-				// }
+				if (r && !r.exc){
+					frappe.call({
+						method: 'frappe.core.doctype.communication.email.make',
+						args: {
+							doctype: cur_frm.doctype,
+							name: cur_frm.docname,
+							subject: format(__('Reason for Cancel')),
+							content: args.cancel_reason,
+							send_mail: false,
+							send_me_a_copy: false,
+							communication_medium: 'Other',
+							sent_or_received: 'Sent'
+						},
+						callback: function(res){
+							cur_frm.reload_doc();
+						}
+					});
+				}
 				dialog.hide();
 				cur_frm.refresh();
 				cur_frm.reload_doc();
