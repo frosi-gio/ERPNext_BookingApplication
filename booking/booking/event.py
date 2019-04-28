@@ -422,7 +422,7 @@ def send_email(doc,flag=1):
 	if doc.workflow_state == "Opened":
 		
 		if customer_email:
-			msg = 'Dear {0},<br/> This is a confirmation that you have temporarily booked {1} on {2} at time:{3} with {4} at {5}.<br/>We will shortly contact you by email to confirm your chosen appointment.<br/>Thank you for choosing Antonios Barber Shop.<br/><b>{6}</b><br/><b>{7}</b><br/><b>{8}</b>'.format(cstr(doc.customer), cstr(doc.service), cstr(doc.appointment_date),cstr(doc.appointment_time), cstr(doc.barber_beautician_name), cstr(doc.location), cstr(doc.company), cstr(frappe.db.get_value("Company",str(doc.company), "phone_no")), cstr(frappe.db.get_value("Company",str(doc.company), "website")))
+			msg = 'Dear {0},<br/> This is a confirmation that you have temporarily booked {1} on {2} at {3} with {4} at {5}.<br/>We will shortly contact you by email to confirm your chosen appointment.<br/>Thank you for choosing Antonios Barber Shop.<br/><b>{6}</b><br/><b>{7}</b><br/><b>{8}</b>'.format(cstr(doc.customer), cstr(doc.service), cstr(doc.appointment_date),cstr(doc.appointment_time), cstr(doc.barber_beautician_name), cstr(doc.location), cstr(doc.company), cstr(frappe.db.get_value("Company",str(doc.company), "phone_no")), cstr(frappe.db.get_value("Company",str(doc.company), "website")))
 		
 			frappe.sendmail(recipients=customer_email,
 			subject="Antonio Barber Pending appointment",
