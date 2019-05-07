@@ -89,6 +89,9 @@ fixtures = ["Workflow","Custom Field","Property Setter"]
 # Hook on document methods and events
 
 doc_events = {
+	"Contact":{
+		"con_validate" : "booking.booking.contact.validate"
+	},
 	"Item":{
 		"validate" : "booking.booking.item.validate",
 		"after_insert": "booking.booking.item.after_insert",

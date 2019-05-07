@@ -13,6 +13,7 @@ import json
 Customer_API_URL_LIVE=cstr(frappe.db.get_value("Booking Settings",None,"customer_api"))
 
 def validate(self,method):
+    self.name = self.customer_mobile_number_
     self.mobile_no = self.customer_mobile_number_
     self.email_id = self.customer_email_id
 
