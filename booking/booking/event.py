@@ -554,7 +554,7 @@ def check_email(email):
         else:
             return False
     except:
-        frappe.msgprint("<b>Calendar Event</b> cannot be set as <b>customer email</b> is not proper.")
+        frappe.msgprint("<b>Calendar Event</b> cannot be set as <b>customer email</b> is not proper/Unavailable.")
 
 @frappe.whitelist()
 def get_wordpress_url():
