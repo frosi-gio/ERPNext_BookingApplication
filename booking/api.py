@@ -184,7 +184,7 @@ def get_availability(booking_date, barber_beautician, service, from_time, to_tim
     # get appointments on that day for employee
     appointments = frappe.get_all(
       "Event",
-      filters=[["barber__beautician", "=", barber_beautician], ["appointment_date","=", date], ["workflow_state", "in", ('Approved','Opened') ]],
+      filters=[["barber_beautician", "=", barber_beautician], ["appointment_date","=", date], ["workflow_state", "in", ('Approved','Opened') ]],
       fields=["name", "appointment_time", "duration", "workflow_state"])
 
     for aptmnt in appointments:
@@ -329,7 +329,7 @@ def get_unique_booking(time,date,barber):
   
   date = getdate(date)
   
-  event_data = frappe.get_all("Event",filters=[["workflow_state", "in", ('Approved','Opened')],["appointment_date","=",date],["barber__beautician","=",barber],["appointment_time","=",time]],fields=['name'])
+  event_data = frappe.get_all("Event",filters=[["workflow_state", "in", ('Approved','Opened')],["appointment_date","=",date],["barber_beautician","=",barber],["appointment_time","=",time]],fields=['name'])
 
   if event_data:
     return "Event exist"

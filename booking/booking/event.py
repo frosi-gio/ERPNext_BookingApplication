@@ -49,10 +49,10 @@ def validate(doc, method):
 	end_date = get_datetime(get_datetime(doc.starts_on) + timedelta(minutes=flt(doc.duration)))
 	doc.ends_on = end_date
 
-	# frappe.throw(str(frappe.db.get_value("Event",{"starts_on":start_date,"barber__beautician":doc.barber__beautician},"name")))
+	# frappe.throw(str(frappe.db.get_value("Event",{"starts_on":start_date,"barber_beautician":doc.barber_beautician},"name")))
 	
 	#set price list by employee pos profile
-	pos_selling_price_list = frappe.db.get_value("POS Profile", {"employee":doc.barber__beautician}, "selling_price_list")
+	pos_selling_price_list = frappe.db.get_value("POS Profile", {"employee":doc.barber_beautician}, "selling_price_list")
 	if hasattr(doc, '__islocal'):
 		doc.price_list = pos_selling_price_list
 
@@ -61,9 +61,9 @@ def validate(doc, method):
 		event_detail.item_code = doc.service
 		event_detail.qty = flt(1)
 
-	if doc.barber__beautician:
+	if doc.barber_beautician:
 		if not doc.pos_profile:
-			pos_profile = frappe.db.get_value("POS Profile", {"employee":doc.barber__beautician}, "name")
+			pos_profile = frappe.db.get_value("POS Profile", {"employee":doc.barber_beautician}, "name")
 			doc.pos_profile = pos_profile
 			frappe.db.set_value("Event", doc.name, "pos_profile", pos_profile)
 			frappe.db.commit()
@@ -307,7 +307,7 @@ def get_availability_data(date, barber_beautician, service):
 		if branch_holidays:
 			for t in branch_holidays.holidays:
 				if t.holiday_date == date:
-					frappe.msgprint(_("Barber / Beautician not available on <b>{0}</b> as it's a <b>Holiday</b>").format(datetime.strptime(cstr(date), '%Y-%m-%d').strftime('%d-%m-%Y')), _('Holiday'), 'red')
+					frappe.msgprint(_("Barber not available on <b>{0}</b> as it's a <b>Holiday</b>").format(datetime.strptime(cstr(date), '%Y-%m-%d').strftime('%d-%m-%Y')), _('Holiday'), 'red')
 
 	# if barber holiday return
 	barber_beautician_holiday_name = frappe.db.get_value("Employee", barber_beautician, "holiday_list")
@@ -317,13 +317,13 @@ def get_availability_data(date, barber_beautician, service):
 		if barber_beautician_holidays:
 			for t in barber_beautician_holidays.holidays:
 				if t.holiday_date == date:
-					frappe.msgprint(_("Barber / Beautician not available on <b>{0}</b> as it's a <b>Holiday</b>").format(datetime.strptime(cstr(date), '%Y-%m-%d').strftime('%d-%m-%Y')), _('Holiday'), 'red')
+					frappe.msgprint(_("Barber not available on <b>{0}</b> as it's a <b>Holiday</b>").format(datetime.strptime(cstr(date), '%Y-%m-%d').strftime('%d-%m-%Y')), _('Holiday'), 'red')
 
 	# if employee on leave return
 	leave_application_list = frappe.db.sql("""SELECT * FROM `tabLeave Application` WHERE `tabLeave Application`.status = 'Approved' AND `tabLeave Application`.employee = %s AND (%s BETWEEN `tabLeave Application`.from_date AND `tabLeave Application`.to_date)""" ,(cstr(barber_beautician), cstr(date)),as_dict = 1)
 
 	if leave_application_list and len(leave_application_list) > 0:
-		frappe.msgprint(_("Barber / Beautician is on leave on <b>{0}</b>. Please select another day or change the barber.").format(datetime.strptime(cstr(date), '%Y-%m-%d').strftime('%d-%m-%Y')), _('On Leave'), 'red')
+		frappe.msgprint(_("Barber is on leave on <b>{0}</b>. Please select another day or change the barber.").format(datetime.strptime(cstr(date), '%Y-%m-%d').strftime('%d-%m-%Y')), _('On Leave'), 'red')
 
 	# get barber's schedule
 	barber_beautician_schedule_name = frappe.db.get_value("Employee", barber_beautician, "daily_schedule_list")
@@ -345,14 +345,14 @@ def get_availability_data(date, barber_beautician, service):
 	# if employee not available return
 	if not available_slots:
 		# TODO: return available slots in nearby dates
-		frappe.throw(_("Barber / Beautician not available on {0}").format(weekday))
+		frappe.throw(_("Barber not available on {0}").format(weekday))
 
 	sorted_available_slots = sorted(available_slots, key= lambda k: flt(k['from_time_to_decimal']))
 
 	# get appointments on that day for employee
 	appointments = frappe.get_all(
 		"Event",
-		filters=[["barber__beautician", "=", barber_beautician], ["appointment_date","=", date], ["workflow_state", "in", ('Approved','Opened') ]],
+		filters=[["barber_beautician", "=", barber_beautician], ["appointment_date","=", date], ["workflow_state", "in", ('Approved','Opened') ]],
 		fields=["name", "appointment_time", "duration", "workflow_state"])
 
 	return {
