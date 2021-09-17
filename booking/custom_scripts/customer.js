@@ -3,66 +3,65 @@ Customer_create_flag = 0
 
 
 frappe.ui.form.on('Customer', {
-	refresh: function(frm) {
-	},
-	onload: function(frm) {
+    refresh: function(frm) {},
+    onload: function(frm) {
 
-	
 
-	}
-	// 	,
-	// validate: function(frm){
 
-	// 	make_user_on_website(doc,dt,dn)
-	// }
+        }
+        // 	,
+        // validate: function(frm){
+
+    // 	make_user_on_website(doc,dt,dn)
+    // }
 });
 
 
-function makepass() {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+// function makepass() {
+//   var text = "";
+//   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  for (var i = 0; i < 8; i++)
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+//   for (var i = 0; i < 8; i++)
+//     text += possible.charAt(Math.floor(Math.random() * possible.length));
 
-  return text;
-}
+//   return text;
+// }
 
 
-function get_customer_api(){
-	frappe.call({
-	method : 'booking.booking.customer.get_wordpress_url',
-	args:{},
-	callback: (r) => {
-				// console.log(r)
-				
-				Customer_url = r.message
-				// console.log(Customer_url)
-				if(!Customer_url){
-					// console.log("in condition")
-					Customer_create_flag = 0
-				}
-				else{
-					// console.log("else")
+// function get_customer_api(){
+// 	frappe.call({
+// 	method : 'booking.booking.customer.get_wordpress_url',
+// 	args:{},
+// 	callback: (r) => {
+// 				// console.log(r)
 
-					Customer_create_flag = 1
-				}
-		}
-	})
-}
+// 				Customer_url = r.message
+// 				// console.log(Customer_url)
+// 				if(!Customer_url){
+// 					// console.log("in condition")
+// 					Customer_create_flag = 0
+// 				}
+// 				else{
+// 					// console.log("else")
 
-cur_frm.cscript.customer_mobile_number_ = function(doc,dt,dn){
+// 					Customer_create_flag = 1
+// 				}
+// 		}
+// 	})
+// }
 
-if (doc.customer_mobile_number_){
-	cur_frm.set_value("mobile_no", doc.customer_mobile_number_)
-}
-}
-cur_frm.cscript.customer_email_id = function(doc,dt,dn){
+// cur_frm.cscript.customer_mobile_number_ = function(doc, dt, dn) {
 
-if (doc.customer_email_id){
-	cur_frm.set_value("email_id", doc.customer_email_id)
-}
-}
+//     if (doc.customer_mobile_number_) {
+//         cur_frm.set_value("mobile_no", doc.customer_mobile_number_)
+//     }
+// }
+// cur_frm.cscript.customer_email_id = function(doc, dt, dn) {
+
+//         if (doc.customer_email_id) {
+//             cur_frm.set_value("email_id", doc.customer_email_id)
+//         }
+//     }
 // function make_user_on_website(doc,dt,dn){
 // 	var name = doc.name
 // 	var customer = doc.customer_name
@@ -73,7 +72,7 @@ if (doc.customer_email_id){
 // 	args:{name,customer,email,mobile},
 // 	callback: (r) => {
 // 				// console.log(r)
-				
+
 // 				Customer_url = r.message
 // 				// console.log(Customer_url)
 // 				if(!Customer_url){
@@ -117,7 +116,7 @@ if (doc.customer_email_id){
 // 		// 		     						user_id:data.user_id
 // 		// 		     					},
 // 		// 		     			callback: function(r) {
-				     				
+
 // 		// 		     			}
 // 		// 		     				})
 // 		// 		       }
@@ -131,7 +130,5 @@ if (doc.customer_email_id){
 // 		// 	// console.log("Customer Api not found")
 // 		// }
 
-			
+
 // }
-
-

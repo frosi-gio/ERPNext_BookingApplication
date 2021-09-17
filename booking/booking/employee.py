@@ -252,7 +252,7 @@ def create_pos_profile(doc):
 			"employee":str(doc.name),
 			"item_groups":item_groups,
 			"letter_head":frappe.db.get_value("Company", doc.company, "default_letter_head"),
-			"tc_name":frappe.db.get_value("Company", doc.company, "default_terms"),
+			"tc_name":frappe.db.get_value("Company", doc.company, "default_selling_terms"),
 			"taxes_and_charges":frappe.db.get_value("Sales Taxes and Charges Template",{"is_default":1}, "name"),
 			"territory":frappe.db.get_value("Branch", doc.branch, "territory")
 		})

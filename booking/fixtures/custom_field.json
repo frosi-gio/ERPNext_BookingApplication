@@ -703,7 +703,7 @@
         "in_list_view": 0,
         "in_standard_filter": 1,
         "insert_after": "booking_details_column_break",
-        "label": "Barber  / Beautician",
+        "label": "Barber",
         "modified": "2018-12-28 10:38:54.008360",
         "name": "Event-barber_beautician",
         "no_copy": 0,

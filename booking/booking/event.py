@@ -104,19 +104,19 @@ def validate(doc, method):
 	# 	gcalendar.events().delete(calendarId=calendar_id, eventId=doc.google_event_id).execute()
 
 
-def after_delete(doc, method):
-	access_token = get_access_token()
-	credentials_dict = {
-	'token': access_token,
-	'refresh_token': refresh_token,
-	'token_uri': 'https://www.googleapis.com/oauth2/v4/token',
-	'client_id': client_id,
-	'client_secret': client_secret,
-	'scopes':SCOPES
-	}
-	credentials = google.oauth2.credentials.Credentials(**credentials_dict)
-	gcalendar = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
-	gcalendar.events().delete(calendarId=calendar_id, eventId=doc.google_event_id).execute()
+# def after_delete(doc, method):
+# 	access_token = get_access_token()
+# 	credentials_dict = {
+# 	'token': access_token,
+# 	'refresh_token': refresh_token,
+# 	'token_uri': 'https://www.googleapis.com/oauth2/v4/token',
+# 	'client_id': client_id,
+# 	'client_secret': client_secret,
+# 	'scopes':SCOPES
+# 	}
+# 	credentials = google.oauth2.credentials.Credentials(**credentials_dict)
+# 	gcalendar = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
+# 	gcalendar.events().delete(calendarId=calendar_id, eventId=doc.google_event_id).execute()
 
 def after_insert(doc, method):
 	pass
@@ -245,36 +245,36 @@ def insert_events(doc,access_token):
 		frappe.msgprint("in except")
 		frappe.log_error(frappe.get_traceback(), "Google Calendar Synchronization Error")
 
-@frappe.whitelist()
-def google_callback(code=None):
+# @frappe.whitelist()
+# def google_callback(code=None):
 
-	if code is None:
-		return {
-			'url': 'https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&response_type=code&prompt=consent&client_id={}&include_granted_scopes=true&scope={}&redirect_uri={}'.format(client_id, SCOPES, redirect_uri)
-			}
-	else:
-		try:
-			data = {'code': code,
-				'client_id': client_id,
-				'client_secret': client_secret,
-				'redirect_uri': redirect_uri,
-				'grant_type': 'authorization_code'}
-			r = requests.post('https://www.googleapis.com/oauth2/v4/token', data=data).json()
+# 	if code is None:
+# 		return {
+# 			'url': 'https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&response_type=code&prompt=consent&client_id={}&include_granted_scopes=true&scope={}&redirect_uri={}'.format(client_id, SCOPES, redirect_uri)
+# 			}
+# 	else:
+# 		try:
+# 			data = {'code': code,
+# 				'client_id': client_id,
+# 				'client_secret': client_secret,
+# 				'redirect_uri': redirect_uri,
+# 				'grant_type': 'authorization_code'}
+# 			r = requests.post('https://www.googleapis.com/oauth2/v4/token', data=data).json()
 			
-			frappe.db.set_value("Booking Settings", None, "code", code)
-			frappe.msgprint(cstr(r))
-			if 'access_token' in r:
-				pass
-				frappe.db.set_value("Booking Settings", None, "access_token", r['access_token'])
-			if 'refresh_token' in r:
-				pass
-				frappe.db.set_value("Booking Settings", None, "refresh_token", r['refresh_token'])
-			frappe.db.commit()
-			frappe.local.response["type"] = "redirect"
-			frappe.local.response["location"] = "success.html"
-			return
-		except Exception as e:
-			frappe.throw(e.__traceback__)
+# 			frappe.db.set_value("Booking Settings", None, "code", code)
+# 			frappe.msgprint(cstr(r))
+# 			if 'access_token' in r:
+# 				pass
+# 				frappe.db.set_value("Booking Settings", None, "access_token", r['access_token'])
+# 			if 'refresh_token' in r:
+# 				pass
+# 				frappe.db.set_value("Booking Settings", None, "refresh_token", r['refresh_token'])
+# 			frappe.db.commit()
+# 			frappe.local.response["type"] = "redirect"
+# 			frappe.local.response["location"] = "success.html"
+# 			return
+# 		except Exception as e:
+# 			frappe.throw(e.__traceback__)
 
 
 # Get available timeslot by employee and date.
