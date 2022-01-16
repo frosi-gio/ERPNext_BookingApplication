@@ -6,7 +6,7 @@ frappe.ui.form.on('Event', {
 			// frm.disable_save();
 
 			var barber = 'EMP/'+getUrlVars()['barber'].toString()
-			frm.set_value("barber__beautician", barber);
+			frm.set_value("barber_beautician", barber);
 			frm.set_value("appointment_date", getUrlVars()['date']);
 			// frm.set_value("appointment_time", getUrlVars()['time']);
 			// console.log(getUrlVars())
@@ -24,17 +24,17 @@ frappe.ui.form.on('Event', {
 	},
 	check_availability: function(frm) {
 
-		var { barber__beautician, appointment_date, service } = frm.doc;
+		var { barber_beautician, appointment_date, service } = frm.doc;
 
-		if(!(barber__beautician && appointment_date && service)) {
-			frappe.throw(__("Please select Service, Barber / Beautician and Appointment Date"));
+		if (!(barber_beautician && appointment_date && service)) {
+			frappe.throw(__("Please select Service, Barber/Beautician and Appointment Date"));
 		}
 
 		// show booking modal
 		frm.call({
 			method: 'booking.booking.event.get_availability_data',
 			args: {
-				barber_beautician: barber__beautician,
+				barber_beautician: barber_beautician,
 				date: appointment_date,
 				service: service
 			},
@@ -58,7 +58,7 @@ frappe.ui.form.on('Event', {
 		frm.call({
 			method: 'booking.booking.event.get_day_end_time',
 			args: {
-				barber_beautician: barber__beautician,
+				barber_beautician: barber_beautician,
 				date: appointment_date
 			},
 			callback: (r) => {
@@ -80,7 +80,7 @@ frappe.ui.form.on('Event', {
 		frm.call({
 			method: 'booking.booking.event.get_lunch_start_time',
 			args: {
-				barber_beautician: barber__beautician,
+				barber_beautician: barber_beautician,
 				date: appointment_date
 			},
 			callback: (r) => {
@@ -99,7 +99,7 @@ frappe.ui.form.on('Event', {
 		function show_empty_state() {
 			frappe.msgprint({
 				title: __('Not Available'),
-				message: __("Barber / Beautician {0} not available on {1}", [frm.doc.barber_beautician_name.bold(), appointment_date.bold()]),
+				message: __("Barber/Beautician {0} not available on {1}", [frm.doc.barber_beautician_name.bold(), appointment_date.bold()]),
 				indicator: 'red'
 			});
 		}
@@ -204,7 +204,7 @@ frappe.ui.form.on('Event', {
 
 				frappe.msgprint({
 					title: __('Not Available'),
-					message: __("Barber / Beautician {0} not available today after <b>{1}</b>", [frm.doc.barber_beautician_name.bold(), day_end_time.bold()]),
+					message: __("Barber/Beautician {0} not available today after <b>{1}</b>", [frm.doc.barber_beautician_name.bold(), day_end_time.bold()]),
 					indicator: 'red'
 				});
 			}
@@ -424,7 +424,7 @@ cur_frm.fields_dict.service.get_query = function(doc) {
 	}
 }
 
-cur_frm.fields_dict.barber__beautician.get_query = function(doc, cdt, cdn) {
+cur_frm.fields_dict.barber_beautician.get_query = function (doc, cdt, cdn) {
 	return{
 		query: "booking.booking.employee.get_employee_name_by_service",
 		filters: {

@@ -13,7 +13,7 @@ def execute(filters=None):
 	get_data_list = get_todo_list(filters)
 
 	for d in get_data_list:
-		data.append([d.starts_on, d.ends_on, d.location, d.customer, d.service, d.barber__beautician, d.barber_beautician_name, d.workflow_state])
+		data.append([d.starts_on, d.ends_on, d.location, d.customer, d.service, d.barber_beautician, d.barber_beautician_name, d.workflow_state])
 
 	return columns, data
 
@@ -78,6 +78,6 @@ def get_columns(filters):
 def get_todo_list(filters):
 	today_date = getdate(frappe.utils.today())
 	tomorrow_date = add_days(today_date,1)
-	tomorrow_schedule = frappe.get_all('Event', filters={'appointment_date':str(tomorrow_date)}, fields=['starts_on','ends_on', 'location', 'customer','service','barber__beautician','barber_beautician_name','workflow_state'])
+	tomorrow_schedule = frappe.get_all('Event', filters={'appointment_date':str(tomorrow_date)}, fields=['starts_on','ends_on', 'location', 'customer','service','barber_beautician','barber_beautician_name','workflow_state'])
 
 	return tomorrow_schedule

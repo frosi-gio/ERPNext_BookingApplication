@@ -79,9 +79,9 @@ def get_availability_data(booking_date, barber_beautician, service, from_time, t
 @frappe.whitelist(allow_guest = True)
 def get_availability(booking_date, barber_beautician, service, from_time, to_time, days):
   """
-  Get availability data of 'Barber / Beautician' on 'date'
+  Get availability data of 'Barber/Beautician' on 'date'
   :param date: Date to check in schedule
-  :param barber_beautician: Name of the Barber / Beautician
+  :param barber_beautician: Name of the Barber/Beautician
   :param service: Duration of service
   :return: dict containing a list of available slots, list of appointments and duration of service
   """
@@ -184,7 +184,7 @@ def get_availability(booking_date, barber_beautician, service, from_time, to_tim
     # get appointments on that day for employee
     appointments = frappe.get_all(
       "Event",
-      filters=[["barber__beautician", "=", barber_beautician], ["appointment_date","=", date], ["workflow_state", "in", ('Approved','Opened') ]],
+      filters=[["barber_beautician", "=", barber_beautician], ["appointment_date","=", date], ["workflow_state", "in", ('Approved','Opened') ]],
       fields=["name", "appointment_time", "duration", "workflow_state"])
 
     for aptmnt in appointments:
@@ -248,9 +248,9 @@ def get_availability(booking_date, barber_beautician, service, from_time, to_tim
 @frappe.whitelist(allow_guest = True)
 def get_day_end_time(date, barber_beautician):
   """
-  Get end time of 'Barber / Beautician' on 'date'
+  Get end time of 'Barber/Beautician' on 'date'
   :param date: Date to check in schedule
-  :param barber_beautician: Name of the Barber / Beautician
+  :param barber_beautician: Name of the Barber/Beautician
   :return: end time of the given date
   """
   barber_beautician_schedule_name = frappe.db.get_value("Employee", barber_beautician, "daily_schedule_list")
@@ -267,9 +267,9 @@ def get_day_end_time(date, barber_beautician):
 @frappe.whitelist(allow_guest = True)
 def get_lunch_start_time(date, barber_beautician):
   """
-  Get lunch start time of 'Barber / Beautician' on 'date'
+  Get lunch start time of 'Barber/Beautician' on 'date'
   :param date: Date to check in schedule
-  :param barber_beautician: Name of the Barber / Beautician
+  :param barber_beautician: Name of the Barber/Beautician
   :return: lunch start time of the given date
   """
   barber_beautician_schedule_name = frappe.db.get_value("Employee", barber_beautician, "daily_schedule_list")
@@ -329,7 +329,7 @@ def get_unique_booking(time,date,barber):
   
   date = getdate(date)
   
-  event_data = frappe.get_all("Event",filters=[["workflow_state", "in", ('Approved','Opened')],["appointment_date","=",date],["barber__beautician","=",barber],["appointment_time","=",time]],fields=['name'])
+  event_data = frappe.get_all("Event",filters=[["workflow_state", "in", ('Approved','Opened')],["appointment_date","=",date],["barber_beautician","=",barber],["appointment_time","=",time]],fields=['name'])
 
   if event_data:
     return "Event exist"
